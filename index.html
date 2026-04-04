@@ -93,8 +93,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .case-row strong{color:var(--text);min-width:130px;flex-shrink:0}
 .topic-actions{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
 .section-lbl{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem}
-.topic-layout{display:grid;grid-template-columns:1fr 260px;gap:1.5rem;align-items:start}
-.ref-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;position:sticky;top:1.5rem}
+.topic-layout{display:flex;gap:0;align-items:start;position:relative}
+.topic-questions{flex:1;min-width:0;padding-right:1rem}
+.resize-handle{width:6px;background:transparent;cursor:col-resize;flex-shrink:0;position:relative;border-radius:3px;transition:background .15s;align-self:stretch;min-height:200px}
+.resize-handle:hover,.resize-handle.dragging{background:var(--accent)}
+.resize-handle::after{content:'';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:2px;height:32px;background:var(--border2);border-radius:1px}
+.ref-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;position:sticky;top:1.5rem;width:280px;min-width:200px;max-width:600px;flex-shrink:0}
 .ref-panel-hdr{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
 .ref-panel-lbl{font-size:9px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace;margin-bottom:3px;display:flex;align-items:center;gap:5px}
 .ref-pulse{width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block}
@@ -225,14 +229,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="done-btn outline" id="t-done-btn" onclick="toggleDone(currentTopic)"></button>
       <span style="font-size:12px;color:var(--text3)" id="t-score-lbl"></span>
     </div>
-    <div class="topic-layout">
-      <div>
+    <div class="topic-layout" id="topic-layout">
+      <div class="topic-questions">
         <div id="t-questions"></div>
         <div class="score-box" id="t-score-box">
           <div><div class="score-main" id="t-score-main"></div><div class="score-sub" id="t-score-sub"></div></div>
           <button class="done-btn" onclick="toggleDone(currentTopic)">Mark complete ✓</button>
         </div>
       </div>
+      <div class="resize-handle" id="resize-handle" title="Drag to resize"></div>
       <div class="ref-panel" id="ref-panel">
         <div class="ref-panel-hdr">
           <div class="ref-panel-lbl"><span class="ref-pulse"></span>Law reference</div>
@@ -446,8 +451,8 @@ let currentTopic=null;
 function load(){try{const s=localStorage.getItem('btc_v4');if(s)S=JSON.parse(s);}catch(e){S={};}}
 function save(){try{localStorage.setItem('btc_v4',JSON.stringify(S));}catch(e){}}
 function ws(id){return S[id]||{done:false,scores:[],answers:{}};}
-function badgeCls(sc){if(!sc||!sc.length)return'none';const s=sc[sc.length-1];return s/10>=0.8?'g':s/10>=0.6?'a':'b';}
-function badgeTxt(sc){if(!sc||!sc.length)return'—';return sc[sc.length-1]+'/'+10;}
+function badgeCls(sc,total){if(!sc||!sc.length)return'none';const t=total||10;const s=sc[sc.length-1];return s/t>=0.8?'g':s/t>=0.6?'a':'b';}
+function badgeTxt(sc,total){if(!sc||!sc.length)return'—';const t=total||10;return sc[sc.length-1]+'/'+t;}
 
 function updateCountdowns(){
   const now=new Date();
@@ -465,13 +470,13 @@ function buildNav(){
   CIVIL.forEach(w=>{
     const b=document.createElement('button');
     b.className='nav-btn';b.id='nb-'+w.id;b.onclick=()=>showTopic(w.id);
-    b.innerHTML=`<span class="nav-dot" style="background:${ws(w.id).done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(ws(w.id).scores)}">${badgeTxt(ws(w.id).scores)}</span>`;
+    b.innerHTML=`<span class="nav-dot" style="background:${ws(w.id).done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(ws(w.id).scores,w.qs.length)}">${badgeTxt(ws(w.id).scores,w.qs.length)}</span>`;
     cv.appendChild(b);
   });
   CRIMINAL.forEach(w=>{
     const b=document.createElement('button');
     b.className='nav-btn';b.id='nb-'+w.id;b.onclick=()=>showTopic(w.id);
-    b.innerHTML=`<span class="nav-dot" style="background:${ws(w.id).done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(ws(w.id).scores)}">${badgeTxt(ws(w.id).scores)}</span>`;
+    b.innerHTML=`<span class="nav-dot" style="background:${ws(w.id).done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(ws(w.id).scores,w.qs.length)}">${badgeTxt(ws(w.id).scores,w.qs.length)}</span>`;
     cr.appendChild(b);
   });
 }
@@ -480,7 +485,7 @@ function refreshNav(){
   [...CIVIL,...CRIMINAL].forEach(w=>{
     const b=document.getElementById('nb-'+w.id);if(!b)return;
     const s=ws(w.id);
-    b.innerHTML=`<span class="nav-dot" style="background:${s.done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(s.scores)}">${badgeTxt(s.scores)}</span>`;
+    b.innerHTML=`<span class="nav-dot" style="background:${s.done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(s.scores,w.qs.length)}">${badgeTxt(s.scores,w.qs.length)}</span>`;
   });
 }
 
@@ -576,7 +581,11 @@ function refreshDash(){
   const all=[...CIVIL,...CRIMINAL];
   const done=all.filter(w=>ws(w.id).done).length;
   const att=all.filter(w=>(ws(w.id).scores||[]).length>0);
-  const avg=att.length>0?Math.round(att.reduce((a,w)=>a+(ws(w.id).scores.slice(-1)[0]||0),0)/att.length*10)/10:null;
+  const avg=att.length>0?Math.round(att.reduce((a,w)=>{
+    const sc=ws(w.id).scores;
+    const latest=sc[sc.length-1];
+    return a+(latest/w.qs.length*10);
+  },0)/att.length*10)/10:null;
   const wk=all.filter(w=>{const s=ws(w.id).scores;return s&&s.length>0&&s[s.length-1]<7;});
   document.getElementById('dash-stats').innerHTML=`
     <div class="stat-card"><div class="stat-lbl">Topics done</div><div class="stat-val">${done}/${all.length}</div></div>
@@ -857,6 +866,52 @@ load();buildNav();refreshDash();updateCountdowns();setInterval(updateCountdowns,
 const savedDark=localStorage.getItem('btc_dark')==='1';
 if(savedDark){document.documentElement.classList.add('dark');const dt=document.getElementById('dark-toggle');if(dt)dt.checked=true;}
 function toggleDark(on){document.documentElement.classList.toggle('dark',on);localStorage.setItem('btc_dark',on?'1':'0');}
+
+(function initResize(){
+  let dragging=false,startX=0,startW=0;
+  document.addEventListener('mousedown',e=>{
+    const h=document.getElementById('resize-handle');
+    if(!h||!h.contains(e.target))return;
+    const panel=document.getElementById('ref-panel');
+    if(!panel)return;
+    dragging=true;startX=e.clientX;startW=panel.offsetWidth;
+    h.classList.add('dragging');
+    document.body.style.cursor='col-resize';
+    document.body.style.userSelect='none';
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const panel=document.getElementById('ref-panel');
+    if(!panel)return;
+    const delta=startX-e.clientX;
+    const newW=Math.min(700,Math.max(200,startW+delta));
+    panel.style.width=newW+'px';
+  });
+  document.addEventListener('mouseup',e=>{
+    if(!dragging)return;
+    dragging=false;
+    const h=document.getElementById('resize-handle');
+    if(h)h.classList.remove('dragging');
+    document.body.style.cursor='';
+    document.body.style.userSelect='';
+  });
+  document.addEventListener('touchstart',e=>{
+    const h=document.getElementById('resize-handle');
+    if(!h||!h.contains(e.target))return;
+    const panel=document.getElementById('ref-panel');
+    if(!panel)return;
+    dragging=true;startX=e.touches[0].clientX;startW=panel.offsetWidth;
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    if(!dragging)return;
+    const panel=document.getElementById('ref-panel');
+    if(!panel)return;
+    const delta=startX-e.touches[0].clientX;
+    const newW=Math.min(700,Math.max(200,startW+delta));
+    panel.style.width=newW+'px';
+  },{passive:true});
+  document.addEventListener('touchend',()=>{dragging=false;});
+})();
 </script>
 </body>
 </html>
