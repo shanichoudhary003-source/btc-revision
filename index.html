@@ -93,6 +93,32 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .case-row strong{color:var(--text);min-width:130px;flex-shrink:0}
 .topic-actions{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
 .section-lbl{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem}
+.topic-layout{display:grid;grid-template-columns:1fr 260px;gap:1.5rem;align-items:start}
+.ref-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;position:sticky;top:1.5rem}
+.ref-panel-hdr{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.ref-panel-lbl{font-size:9px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace;margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.ref-pulse{width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block}
+.ref-panel-title{font-size:13px;font-weight:500;color:var(--text);line-height:1.3}
+.ref-panel-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.ref-panel-body{padding:12px;display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto}
+.ref-card{background:var(--surface2);border-radius:var(--r);padding:10px 12px}
+.ref-card-tag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500;margin-bottom:5px;font-family:'DM Mono',monospace}
+.ref-card-tag.rule{background:var(--accent-light);color:var(--accent-text)}
+.ref-card-tag.stat{background:var(--warn-light);color:var(--warn)}
+.ref-card-tag.case{background:var(--danger-light);color:var(--danger)}
+.ref-card-tag.note{background:var(--surface);color:var(--text3);border:1px solid var(--border)}
+.ref-card-title{font-size:11px;font-weight:500;color:var(--text);margin-bottom:4px}
+.ref-card-text{font-size:11px;color:var(--text2);line-height:1.6}
+.ref-card-text strong{color:var(--text);font-weight:500}
+.ref-empty{padding:24px 12px;text-align:center;color:var(--text3);font-size:12px;line-height:1.6}
+.ref-progress{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2)}
+.ref-progress-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace;margin-bottom:7px}
+.q-dots{display:flex;gap:5px;flex-wrap:wrap}
+.q-dot{width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:500;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);color:var(--text3);background:var(--surface);transition:all .2s}
+.q-dot.correct{background:var(--success-light);color:var(--success);border-color:var(--success)}
+.q-dot.wrong{background:var(--danger-light);color:var(--danger);border-color:var(--danger)}
+.q-dot.current{border-color:var(--text2);color:var(--text)}
+@media(max-width:900px){.topic-layout{grid-template-columns:1fr}.ref-panel{display:none}}
 @media(max-width:680px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border)}.stats-row{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}.guide-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -199,10 +225,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <button class="done-btn outline" id="t-done-btn" onclick="toggleDone(currentTopic)"></button>
       <span style="font-size:12px;color:var(--text3)" id="t-score-lbl"></span>
     </div>
-    <div id="t-questions"></div>
-    <div class="score-box" id="t-score-box">
-      <div><div class="score-main" id="t-score-main"></div><div class="score-sub" id="t-score-sub"></div></div>
-      <button class="done-btn" onclick="toggleDone(currentTopic)">Mark complete ✓</button>
+    <div class="topic-layout">
+      <div>
+        <div id="t-questions"></div>
+        <div class="score-box" id="t-score-box">
+          <div><div class="score-main" id="t-score-main"></div><div class="score-sub" id="t-score-sub"></div></div>
+          <button class="done-btn" onclick="toggleDone(currentTopic)">Mark complete ✓</button>
+        </div>
+      </div>
+      <div class="ref-panel" id="ref-panel">
+        <div class="ref-panel-hdr">
+          <div class="ref-panel-lbl"><span class="ref-pulse"></span>Law reference</div>
+          <div class="ref-panel-title" id="ref-title">Answer a question to see the relevant law</div>
+          <div class="ref-panel-sub" id="ref-sub"></div>
+        </div>
+        <div class="ref-panel-body" id="ref-body">
+          <div class="ref-empty">Answer any question and the relevant CPR rule or statutory provision will appear here automatically.</div>
+        </div>
+        <div class="ref-progress">
+          <div class="ref-progress-lbl">Questions</div>
+          <div class="q-dots" id="ref-dots"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -489,6 +533,7 @@ function showTopic(id){
     document.getElementById('t-score-sub').textContent=pct>=0.8?'Strong — well done.':pct>=0.6?'Solid — review the ones you missed.':'Weak spot — return to the BPP material for this topic.';
     sb.className='score-box show';
   }else{sb.className='score-box';}
+  updateRefPanel(id,answered<w.qs.length?answered:w.qs.length-1,w.qs.length);
 }
 
 function pick(wsId,idx,opt){
@@ -506,6 +551,7 @@ function pick(wsId,idx,opt){
   const exp=document.getElementById('exp-'+key);
   if(exp){exp.innerHTML='<strong>Correct:</strong> '+q.opts[q.ans]+'<br><br>'+q.exp;exp.className='exp show';}
   const answered=Object.keys(s.answers).filter(k=>k.startsWith(wsId+'_')).length;
+  updateRefPanel(wsId,idx,w.qs.length);
   if(answered===w.qs.length){
     const score=w.qs.filter((_,i)=>s.answers[wsId+'_'+i]===_.ans).length;
     if(!s.scores)s.scores=[];s.scores.push(score);S[wsId]=s;
@@ -556,9 +602,260 @@ function refreshWeak(){
   el.innerHTML=wk.map(w=>{const s=ws(w.id).scores;const l=s[s.length-1];return`<div class="weak-card"><div><div class="weak-title">${w.title} — ${w.sub}</div><div class="weak-sub">${w.syllabus}</div></div><div class="weak-score">${l}/${w.qs.length}</div></div>`;}).join('');
 }
 
+const LAW={
+cv1:{title:'CPR 1.1–1.3 — Overriding Objective',sub:'Civil Procedure Rules Part 1',refs:[
+{tag:'rule',title:'CPR 1.1 — The overriding objective',text:'These Rules are a new procedural code with the overriding objective of enabling the court to deal with cases <strong>justly and at proportionate cost</strong>. Dealing justly includes: ensuring parties are on an equal footing; saving expense; dealing with cases proportionately; ensuring they are dealt with expeditiously and fairly; allotting an appropriate share of court resources.'},
+{tag:'rule',title:'CPR 1.2 — Application of the overriding objective',text:'The court must seek to give effect to the overriding objective when it exercises any power or interprets any rule.'},
+{tag:'rule',title:'CPR 1.3 — Duty of parties',text:'<strong>The parties are required to help the court further the overriding objective.</strong> This duty falls on both the parties and their legal representatives.'},
+{tag:'case',title:'Churchill v Merthyr Tydfil [2023]',text:'The Court of Appeal confirmed that courts have the power to <strong>order parties to engage in ADR</strong>, departing from the older Halsey view that courts could not compel ADR. An order to participate in mediation does not breach Art.6 ECHR.'},
+{tag:'case',title:'Halsey v Milton Keynes NHS Trust [2004]',text:'Unreasonable refusal to engage in ADR may result in <strong>adverse costs orders</strong> even against a party that wins at trial. Courts consider: the nature of the dispute, merits, whether ADR has been attempted, costs of ADR, and prospects of success.'},
+]},
+cv2:{title:'Limitation Act 1980 — Key Periods',sub:'Limitation Act 1980',refs:[
+{tag:'stat',title:'s.2 — Tort (general)',text:'An action founded on tort shall not be brought after the expiration of <strong>6 years</strong> from the date on which the cause of action accrued.'},
+{tag:'stat',title:'s.5 — Contract',text:'An action founded on simple contract shall not be brought after the expiration of <strong>6 years</strong> from the date on which the cause of action accrued.'},
+{tag:'stat',title:'s.11 — Personal injury',text:'Actions for personal injury must be brought within <strong>3 years</strong> from: (a) the date on which the cause of action accrued; or (b) the date of knowledge (if later). The date of knowledge is defined in s.14.'},
+{tag:'stat',title:'s.14 — Date of knowledge',text:'Date of knowledge means the date when the claimant first had knowledge of: (a) that the injury was significant; (b) that it was attributable to the defendant\'s act or omission; (c) the identity of the defendant.'},
+{tag:'stat',title:'ss.14A–14B — Latent damage',text:'For negligence claims not involving personal injury where facts were not known at accrual: <strong>3 years from date of knowledge</strong> (s.14A) or 6 years from accrual, whichever expires later — subject to a <strong>15-year longstop</strong> from the act of negligence (s.14B).'},
+{tag:'stat',title:'s.28 — Disability (minors)',text:'Where the claimant is under a disability (including being a minor under 18) at the date of accrual, the limitation period does not begin to run until the disability ceases. For a minor, time begins on their <strong>18th birthday</strong>.'},
+{tag:'stat',title:'s.33 — Court\'s discretion (PI)',text:'The court has discretion to disapply the 3-year period in personal injury and fatal accident cases if it would be equitable to do so, having regard to the prejudice to each party.'},
+]},
+cv3:{title:'PD Pre-Action Conduct & PI Protocol',sub:'Practice Direction & Pre-Action Protocol for PI Claims',refs:[
+{tag:'rule',title:'PD PAC para 3 — Objectives',text:'Pre-action protocols and the PD aim to: enable parties to <strong>settle disputes without proceedings</strong>; support efficient management if proceedings are needed; promote a culture of openness.'},
+{tag:'rule',title:'PD PAC para 6 — Proportionality',text:'The costs of the steps taken should be proportionate to the complexity of the case and the amount involved. Excessive pre-action steps may attract adverse costs consequences.'},
+{tag:'stat',title:'PI Protocol — Letter of claim',text:'The claimant should send the defendant a <strong>letter of claim</strong> as soon as there is sufficient information to identify the defendant and the circumstances of the accident. The defendant must <strong>acknowledge within 21 days</strong> of the date of posting.'},
+{tag:'stat',title:'PI Protocol — Response',text:'After acknowledgment, the defendant has <strong>3 months</strong> to investigate and respond. The response must state whether liability is admitted or denied, and if denied, give reasons.'},
+{tag:'rule',title:'PD PAC para 13–16 — Non-compliance',text:'Where a party fails to comply with the protocol, the court may: (a) order that party to pay <strong>costs on the indemnity basis</strong>; (b) order an interest uplift or reduction; (c) stay proceedings; (d) take non-compliance into account when making any order.'},
+{tag:'rule',title:'PD PAC para 9 — Experts pre-action',text:'Where a party instructs an expert pre-action, they should give the other party the opportunity to <strong>agree a joint expert</strong>. If the other party disagrees with the expert\'s conclusions they should say so promptly.'},
+]},
+cv4:{title:'Arbitration Act 1996 — Key Provisions',sub:'Arbitration Act 1996',refs:[
+{tag:'stat',title:'s.1 — General principles',text:'The object of arbitration is the fair resolution of disputes by an impartial tribunal without unnecessary delay or expense. The court should not intervene except as the Act provides. <strong>Party autonomy</strong> is paramount.'},
+{tag:'stat',title:'s.9 — Stay of legal proceedings',text:'A party to an arbitration agreement who is sued may apply to the court to <strong>stay proceedings</strong>. The court must grant a stay unless satisfied that the arbitration agreement is null, void, inoperative or incapable of being performed.'},
+{tag:'stat',title:'s.33 — General duty of tribunal',text:'The tribunal shall act fairly and impartially, giving each party a reasonable opportunity to put their case and deal with the other\'s case.'},
+{tag:'note',title:'Expert determination — key distinction',text:'Unlike arbitration, expert determination has <strong>no statutory framework</strong> and no appeal mechanism. The decision is binding as a matter of contract. Challenge is only available for fraud or material departure from instructions — not mere error of fact or law.'},
+]},
+cv5:{title:'Mediation & ENE — Key Principles',sub:'Jackson ADR Handbook 4th ed.',refs:[
+{tag:'note',title:'Without prejudice rule in mediation',text:'All communications in mediation are <strong>without prejudice</strong> — they cannot be used as evidence in subsequent litigation. This protection applies even without a formal confidentiality agreement, provided the communications are part of genuine settlement negotiations.'},
+{tag:'note',title:'Confidentiality in caucus',text:'Information disclosed in a <strong>private session (caucus)</strong> with the mediator is confidential to that session. The mediator must not disclose it to the other party without express authorisation. This is a core ethical obligation under mediation rules.'},
+{tag:'note',title:'Early Neutral Evaluation (ENE)',text:'ENE produces a <strong>non-binding evaluation</strong> of the merits by a neutral (often a retired judge or senior lawyer). Its purpose is to reset parties\' expectations and encourage settlement. It is available under CPR 3.1(2)(m). The evaluator\'s opinion is not binding unless the parties agree otherwise.'},
+{tag:'note',title:'Mediator\'s role',text:'The mediator facilitates — they do not evaluate, adjudicate or impose a solution. They must be <strong>neutral and impartial</strong>. Where they become aware of unlawful activity or risk of harm, they may need to consider their position under professional rules.'},
+]},
+cv6:{title:'CPR 6 & 7 — Service & Commencement',sub:'Civil Procedure Rules Parts 6 and 7',refs:[
+{tag:'rule',title:'CPR 7.5(1) — Validity of claim form',text:'A claim form must be served within <strong>4 months</strong> after the date of issue (6 months if service is out of the jurisdiction). The claim form ceases to be valid if not served within this period.'},
+{tag:'rule',title:'CPR 6.9 — Service on individual',text:'Where an individual has not given an address for service, the claim form must be served at their <strong>usual or last known residence</strong>.'},
+{tag:'rule',title:'CPR 6.14 — Deemed service of claim form',text:'A claim form served by first class post is deemed to be served on the <strong>second business day after posting</strong>. Different rules apply for other methods — see CPR 6.14 table.'},
+{tag:'rule',title:'CPR 7.6 — Extension of time for service',text:'The court may extend the period within which a claim form may be served. Where the claim form has expired, the court applies strict criteria: Was it impractical to serve in time? Did the claimant act promptly after the period expired?'},
+{tag:'rule',title:'CPR 6.3 — Methods of service',text:'Permitted methods of service: (a) personal service; (b) first class post; (c) document exchange; (d) leaving the document at the specified place; (e) fax; (f) other electronic means; (g) any method permitted by the court.'},
+{tag:'note',title:'Jurisdiction Order 1991 — PI claims',text:'Personal injury claims with a value of <strong>£50,000 or less</strong> must be commenced in the County Court (Article 5, High Court and County Courts Jurisdiction Order 1991).'},
+]},
+cv7:{title:'CPR 19 & 21 — Parties',sub:'Civil Procedure Rules Parts 19 and 21',refs:[
+{tag:'rule',title:'CPR 7.2A — Partnerships',text:'A partnership may sue or be sued in the <strong>firm\'s name</strong>. Where a claim is brought against a partnership in the firm\'s name, any partner may be served.'},
+{tag:'rule',title:'CPR 21.1 — Children & protected parties',text:'A <strong>child</strong> (person under 18) or <strong>protected party</strong> (person who lacks capacity) must have a litigation friend to conduct proceedings on their behalf.'},
+{tag:'rule',title:'CPR 21.4 — Who may be litigation friend',text:'A person may act as litigation friend without a court order if they: (a) can fairly and competently conduct proceedings; (b) have no interest adverse to the child or protected party; (c) consent to act.'},
+{tag:'rule',title:'CPR 21.10 — Settlements',text:'Where a settlement is reached in proceedings involving a child or protected party, the settlement is <strong>not valid without the court\'s approval</strong>. An application must be made to the court for approval.'},
+]},
+cv8:{title:'CPR 15 & 16 — Statements of Case',sub:'Civil Procedure Rules Parts 15 and 16',refs:[
+{tag:'rule',title:'CPR 16.4 — Contents of particulars of claim',text:'Particulars of claim must include: (a) a concise statement of the facts on which the claimant relies; (b) if the claimant is seeking interest, the basis of that claim. In a <strong>personal injury claim</strong> the claimant must also include a schedule of past and future loss and a brief description of the injuries.'},
+{tag:'rule',title:'CPR 16.5(5) — Effect of not dealing with allegation',text:'A defendant who fails to deal with an allegation in the particulars of claim is <strong>taken to admit</strong> that allegation. Every allegation must be specifically admitted, denied, or stated not to be known.'},
+{tag:'rule',title:'CPR 15.4 — Period for filing defence',text:'The period for filing a defence is: (a) <strong>14 days</strong> after service of the particulars of claim; or (b) if the defendant files an acknowledgment of service, <strong>28 days</strong> after service of the particulars of claim.'},
+{tag:'rule',title:'CPR 15.8 — Reply to defence',text:'A claimant who does <strong>not</strong> file a reply to a defence is <strong>not taken to admit</strong> the matters raised in the defence. A reply is optional — it is only needed where the claimant wishes to specifically address matters in the defence.'},
+{tag:'rule',title:'CPR 22 — Statement of truth',text:'A statement of case must be verified by a statement of truth. Making a false statement of truth without honest belief in its truth may result in <strong>contempt of court proceedings</strong> under CPR 32.14.'},
+]},
+cv9:{title:'CPR 20 — Additional Claims',sub:'Civil Procedure Rules Part 20',refs:[
+{tag:'rule',title:'CPR 20.4 — Defendant\'s counterclaim',text:'A defendant may make a counterclaim against the claimant by filing particulars of the counterclaim. If filed at the same time as the defence, <strong>no permission is required</strong>. If filed later, permission of the court is required.'},
+{tag:'rule',title:'CPR 20.6 — Contribution/indemnity from co-party',text:'A defendant who has a claim for a contribution or indemnity against another party may make that claim by filing a notice. <strong>No permission is required</strong> if the notice is filed before or at the same time as the defence.'},
+{tag:'rule',title:'CPR 20.7 — Additional claim against non-party',text:'To bring a non-party into proceedings, a defendant issues an additional claim form. <strong>No permission is required</strong> if issued before or at the same time as the defence. Permission is required thereafter.'},
+{tag:'rule',title:'CPR 20.9 — Effect of service',text:'Service of an additional claim form on a third party makes them <strong>a party to the proceedings</strong>. They then have the same obligations as any other party and must file an acknowledgment of service or defence.'},
+]},
+cv10:{title:'CPR 17 — Amendment',sub:'Civil Procedure Rules Part 17',refs:[
+{tag:'rule',title:'CPR 17.1(1) — Amendment without permission',text:'A party may amend their statement of case <strong>without permission</strong> at any time before it has been served on any other party.'},
+{tag:'rule',title:'CPR 17.1(2) — Amendment after service',text:'After service, a statement of case may only be amended: (a) with the written consent of all other parties; or (b) with the <strong>permission of the court</strong>.'},
+{tag:'rule',title:'CPR 17.4 — Amendment after limitation',text:'Where the limitation period has expired, the court may allow an amendment adding or substituting a new claim only if the new claim arises out of <strong>the same facts or substantially the same facts</strong> as the existing claim (see also LA 1980 s.35).'},
+{tag:'note',title:'PD 17 — Costs of amendment',text:'A party applying for an amendment will <strong>usually be responsible for the costs</strong> of and arising from the amendment — including the costs incurred by the other party in dealing with the amended statement of case.'},
+]},
+cv11:{title:'CPR 18 — Further Information',sub:'Civil Procedure Rules Part 18',refs:[
+{tag:'rule',title:'CPR 18.1 — Request for further information',text:'The court may at any time order a party to: (a) clarify any matter which is in dispute; or (b) give additional information in relation to any such matter. A party should first send a <strong>written request</strong> before making an application.'},
+{tag:'rule',title:'CPR 18.2 — Restriction on use',text:'A party may not use information obtained under Part 18 for any purpose other than the proceedings in which it was obtained, without the court\'s permission.'},
+{tag:'rule',title:'CPR 32.14 — False statements of truth',text:'Proceedings for contempt of court may be brought against a person who <strong>makes a false statement</strong> in a document verified by a statement of truth without an honest belief in its truth. This applies to Part 18 responses.'},
+]},
+cv12:{title:'CPR 12, 13 & 24 — Default & Summary Judgment',sub:'Civil Procedure Rules Parts 12, 13 and 24',refs:[
+{tag:'rule',title:'CPR 12.4 — Default judgment by request',text:'A claimant may obtain default judgment by filing a <strong>request</strong> (without a hearing) where: (a) the claim is for a specified amount of money; and (b) the defendant has not filed an acknowledgment of service or defence in time.'},
+{tag:'rule',title:'CPR 13.2 — Mandatory set aside',text:'The court <strong>must</strong> set aside default judgment if it was wrongly entered — e.g. because the defendant had filed a defence in time, or because the claimant was not entitled to default judgment.'},
+{tag:'rule',title:'CPR 13.3 — Discretionary set aside',text:'The court <strong>may</strong> set aside default judgment if: (a) the defendant has a real prospect of successfully defending; or (b) there is some other good reason. The court will also consider whether the defendant acted <strong>promptly</strong> after discovering the judgment.'},
+{tag:'rule',title:'CPR 24.2 — Summary judgment test',text:'The court may give summary judgment where: (a) the claimant or defendant has <strong>no real prospect of succeeding</strong> on the claim or defence; and (b) there is <strong>no other compelling reason</strong> why the case or issue should be disposed of at trial. "No real prospect" means the prospect must be realistic, not fanciful.'},
+]},
+cv13:{title:'CPR 3 & 26 — Case Management & Sanctions',sub:'Civil Procedure Rules Parts 3 and 26',refs:[
+{tag:'rule',title:'CPR 26.9 — Track allocation',text:'Small claims: claims not exceeding <strong>£10,000</strong>. Fast track: claims exceeding £10,000 but not more than <strong>£25,000</strong>. Multi-track: claims exceeding £25,000, or where complexity requires it. (Intermediate track: £25,000–£100,000 for certain cases.)'},
+{tag:'rule',title:'CPR 3.9 — Relief from sanctions',text:'On an application for relief from sanctions imposed for failure to comply with a rule or order, the court will consider all the circumstances including: (a) the need for litigation to be conducted efficiently; (b) the need to enforce compliance. The three-stage <strong>Denton</strong> test applies.'},
+{tag:'case',title:'Denton v TH White [2014] EWCA Civ 906',text:'Three-stage test for relief from sanctions: <strong>(1)</strong> Assess the seriousness and significance of the breach — if trivial, relief will usually be granted. <strong>(2)</strong> Consider why the default occurred — a good reason supports relief. <strong>(3)</strong> Evaluate all the circumstances, including the need for efficient litigation and compliance.'},
+{tag:'rule',title:'CPR 3.14 — Failure to file costs budget',text:'Unless the court orders otherwise, any party who fails to file a budget in accordance with the rules or any court order will be treated as having filed a budget comprising <strong>only court fees</strong>.'},
+{tag:'rule',title:'CPR 3.4(2) — Grounds for striking out',text:'The court may strike out a statement of case if it appears that: (a) it discloses <strong>no reasonable grounds</strong> for bringing or defending the claim; (b) it is an <strong>abuse of the court\'s process</strong>; or (c) there has been <strong>failure to comply</strong> with a rule, practice direction or court order.'},
+{tag:'rule',title:'CPR 38.6 — Discontinuance costs',text:'Unless the court orders otherwise, a claimant who discontinues is <strong>liable for the costs</strong> of the proceedings up to the date on which notice of discontinuance was served.'},
+]},
+cv14:{title:'CPR 31 — Disclosure & Inspection',sub:'Civil Procedure Rules Part 31',refs:[
+{tag:'rule',title:'CPR 31.6 — Standard disclosure',text:'Standard disclosure requires a party to disclose: (a) documents on which they <strong>rely</strong>; (b) documents which <strong>adversely affect their own case</strong>; (c) documents which adversely affect another party\'s case; (d) documents which <strong>support another party\'s case</strong>.'},
+{tag:'rule',title:'CPR 31.11 — Continuing duty',text:'The duty of disclosure <strong>continues</strong> throughout proceedings. If a party becomes aware that a document to which the duty extends has not been disclosed, they must immediately notify every other party.'},
+{tag:'rule',title:'CPR 31.12 — Specific disclosure',text:'The court may make an order for specific disclosure or inspection requiring a party to: (a) disclose documents specified in the order; (b) carry out a search to the extent stated; (c) disclose any documents located as a result of that search.'},
+{tag:'rule',title:'CPR 31.17 — Third party disclosure',text:'The court may order a person who is not a party to disclose documents if: (a) the documents are likely to <strong>support or adversely affect</strong> a party\'s case; and (b) disclosure is necessary to <strong>fairly dispose of the claim or save costs</strong>.'},
+{tag:'rule',title:'CPR 31.20 — Inadvertent disclosure',text:'Where a party inadvertently allows a privileged document to be inspected, the party who has inspected it may use it only with the court\'s permission. The disclosing party may apply for an <strong>injunction restraining use</strong> of the document.'},
+{tag:'note',title:'Legal advice privilege',text:'Protects <strong>confidential communications</strong> between lawyer and client made for the dominant purpose of giving or receiving legal advice. Litigation privilege protects communications with third parties for the dominant purpose of reasonably anticipated or existing litigation.'},
+{tag:'note',title:'Without prejudice rule',text:'Communications made in <strong>genuine settlement negotiations</strong> are protected from disclosure on liability. The label "without prejudice" is not conclusive — what matters is whether the communication was a genuine attempt to settle. The rule does not prevent disclosure on costs (Calderbank).'},
+]},
+cv15:{title:'CPR 23 & 25 — Interim Applications',sub:'Civil Procedure Rules Parts 23 and 25',refs:[
+{tag:'rule',title:'CPR 23.7 — Notice of application',text:'An application notice must be served as soon as practicable after it is filed and in any event at least <strong>3 clear days</strong> before the court is to deal with the application, unless the court directs otherwise.'},
+{tag:'rule',title:'CPR 25.3 — Without notice applications',text:'The court may grant an interim remedy on a without notice application if it appears that there are <strong>good reasons for not giving notice</strong>, including: (a) exceptional urgency; (b) where giving notice would defeat the purpose of the order; (c) where the court otherwise permits.'},
+{tag:'note',title:'Full and frank disclosure',text:'On a without notice application, the applicant must make <strong>full and frank disclosure</strong> of all material facts, including those adverse to their case. Failure to do so may lead to discharge of the order, even if it was otherwise properly granted.'},
+]},
+cv16:{title:'CPR 25 — Interim Payments & Security',sub:'Civil Procedure Rules Part 25',refs:[
+{tag:'rule',title:'CPR 25.7 — Conditions for interim payment',text:'The court may make an interim payment order if: (a) the defendant has <strong>admitted liability</strong>; (b) the claimant has obtained judgment for damages to be assessed; or (c) the court is satisfied that if the matter went to trial, the claimant would obtain judgment for a <strong>substantial sum</strong>.'},
+{tag:'rule',title:'CPR 25.7(4) — Amount of interim payment',text:'The court must not order an interim payment of more than a <strong>reasonable proportion</strong> of the damages which it considers the claimant is likely to recover at trial.'},
+{tag:'rule',title:'CPR 25.27 — Security for costs conditions',text:'The court may make an order for security for costs where it is satisfied that: (a) it is just to make the order; and (b) one or more conditions apply, including: (b)(ii) reason to believe the claimant company will be unable to pay the defendant\'s costs; (b)(vi) the claimant has taken steps in relation to assets to make it difficult to enforce a costs order.'},
+]},
+cv17:{title:'American Cyanamid — Interim Injunctions',sub:'American Cyanamid Co v Ethicon Ltd [1975] AC 396',refs:[
+{tag:'case',title:'American Cyanamid — Stage 1',text:'Is there a <strong>serious question to be tried</strong>? The claim must not be frivolous or vexatious. The court does not conduct a mini-trial on the merits at this stage. This is a low threshold — if there is a real issue, proceed to stage 2.'},
+{tag:'case',title:'American Cyanamid — Stage 2',text:'Would <strong>damages be an adequate remedy</strong> for the claimant if the injunction were refused but they succeeded at trial? If yes, refuse the injunction. If damages would not adequately compensate (e.g. defendant is insolvent, damage is non-quantifiable), proceed to stage 3.'},
+{tag:'case',title:'American Cyanamid — Stage 3',text:'Consider the <strong>balance of convenience</strong>: would granting or refusing the injunction cause the greater irremediable harm? If damages could adequately compensate the defendant under the cross-undertaking, this favours granting the injunction. Preserve the <strong>status quo</strong> as a final factor.'},
+{tag:'note',title:'Cross-undertaking in damages',text:'The applicant must give an undertaking to compensate the respondent for any loss caused by the injunction if it is ultimately found that the injunction should not have been granted. This is a standard condition of almost all interim injunctions.'},
+{tag:'rule',title:'CPR 25.1 — Types of interim remedy',text:'The court may grant various interim remedies including: (a) interim injunction; (b) freezing injunction; (c) search order; (d) order for inspection of property; (e) interim payment. Each has its own conditions for grant.'},
+]},
+cv18:{title:'CPR 36 — Part 36 Offers',sub:'Civil Procedure Rules Part 36',refs:[
+{tag:'rule',title:'CPR 36.5 — Formal requirements',text:'A Part 36 offer must: (a) be <strong>in writing</strong>; (b) state that it is a Part 36 offer; (c) specify a <strong>relevant period of not less than 21 days</strong>; (d) state whether it relates to the whole or part of the claim; (e) state whether it takes into account any counterclaim. There is no requirement that the offer be expressed as inclusive of interest.'},
+{tag:'rule',title:'CPR 36.10 — Withdrawal during relevant period',text:'During the relevant period, a Part 36 offer <strong>cannot be withdrawn</strong> or changed so as to be less advantageous to the offeree without the court\'s permission.'},
+{tag:'rule',title:'CPR 36.11 — Acceptance',text:'A Part 36 offer may be <strong>accepted at any time</strong>, including after the expiry of the relevant period, unless it has been withdrawn. Late acceptance may have costs consequences.'},
+{tag:'rule',title:'CPR 36.17(3) — Claimant fails to beat defendant\'s offer',text:'Where the claimant fails to obtain a judgment more advantageous than the defendant\'s offer: the defendant is entitled to costs <strong>from the date the relevant period expired</strong>, plus interest on those costs. The claimant gets costs up to expiry of the relevant period only.'},
+{tag:'rule',title:'CPR 36.17(4) — Claimant beats own offer',text:'Where the claimant does better than their own Part 36 offer: (a) interest up to <strong>10% above base rate</strong> on the sum awarded; (b) costs on the <strong>indemnity basis</strong> from expiry of relevant period; (c) enhanced interest on those costs; (d) an <strong>additional amount capped at £75,000</strong> (10% of first £500,000 of damages, 5% above).'},
+{tag:'case',title:'Calderbank offers',text:'A Calderbank offer is made "without prejudice save as to costs". Unlike Part 36, it <strong>does not carry automatic costs consequences</strong> — the court exercises discretion on costs having regard to the offer. It may be shown to the judge on costs but not on liability.'},
+]},
+cv19:{title:'CPR 32 & 34 — Evidence of Fact',sub:'Civil Procedure Rules Parts 32 and 34',refs:[
+{tag:'rule',title:'CPR 32.4 — Requirement to serve witness statements',text:'A party who wishes to rely on oral evidence at trial must serve a witness statement of that evidence. The statement must be signed by the witness and verified by a <strong>statement of truth</strong>.'},
+{tag:'rule',title:'CPR 32.5 — Use of witness statements at trial',text:'Where a party has served a witness statement and wishes to rely on it, the witness must attend to give oral evidence unless the court orders otherwise. The witness statement <strong>stands as evidence in chief</strong>.'},
+{tag:'rule',title:'CPR 32.14 — False statements',text:'Proceedings for <strong>contempt of court</strong> may be brought against a person who makes, or causes to be made, a false statement in a document verified by a statement of truth without an honest belief in its truth.'},
+{tag:'rule',title:'CPR 34.2–34.4 — Witness summons',text:'A witness summons may be issued requiring a person to: (a) attend court to give evidence; or (b) produce documents. A witness summons must be served at least <strong>7 days</strong> before the hearing. Failure to comply is <strong>contempt of court</strong>.'},
+{tag:'stat',title:'Civil Evidence Act 1995 s.1 — Hearsay',text:'In civil proceedings, evidence shall not be excluded on the ground that it is <strong>hearsay</strong>. The court considers the weight to be given to hearsay evidence having regard to all the circumstances, including whether the original maker could have given direct evidence.'},
+]},
+cv20:{title:'CPR 35 — Expert Evidence',sub:'Civil Procedure Rules Part 35',refs:[
+{tag:'rule',title:'CPR 35.3 — Expert\'s overriding duty',text:'It is the duty of experts to help the court on the matters within their expertise. This duty <strong>overrides any obligation</strong> to the person from whom experts have received instructions or by whom they are paid.'},
+{tag:'rule',title:'CPR 35.4 — Permission required',text:'No party may call an expert or put in evidence an expert\'s report <strong>without the court\'s permission</strong>. The court will not give permission unless it is reasonably required to resolve the proceedings.'},
+{tag:'rule',title:'CPR 35.6 — Written questions to experts',text:'A party may put written questions to an expert instructed by another party. Questions must be put <strong>within 28 days</strong> of service of the expert\'s report and must only be for the purpose of <strong>clarification</strong> of the report.'},
+{tag:'rule',title:'CPR 35.7 — Single joint expert',text:'Where two or more parties wish to submit expert evidence on a particular issue, the court may direct that the evidence on that issue is to be given by <strong>one expert only</strong>. On the fast track, a single joint expert is strongly preferred.'},
+{tag:'rule',title:'CPR 35.12 — Discussions between experts',text:'The court may direct a discussion between experts for the purpose of identifying and discussing the expert issues. The experts must produce a statement identifying: (a) issues on which they <strong>agree</strong>; (b) issues on which they <strong>disagree</strong> and why.'},
+]},
+cv21:{title:'CPR 39 & Civil Evidence Acts',sub:'CPR Part 39, CEA 1995 & CEA 1968',refs:[
+{tag:'rule',title:'CPR 39.3 — Absence at trial',text:'If a party does not attend the trial, the court may: (a) proceed in their absence; (b) strike out the claim or defence; (c) make any other order. A party who was absent may apply to set aside the judgment, but must act promptly and show a good reason.'},
+{tag:'stat',title:'Civil Evidence Act 1995 s.1 — Admissibility of hearsay',text:'In civil proceedings, <strong>hearsay evidence is admissible</strong>. The court considers its weight having regard to: whether the original maker could have given direct evidence, any motive to conceal or misrepresent, and whether the evidence was made contemporaneously.'},
+{tag:'stat',title:'Civil Evidence Act 1995 s.4 — Weighing hearsay',text:'Factors relevant to the weight to be given to hearsay evidence include: whether it would have been reasonable and practicable to produce the original maker as a witness; whether the original statement was made contemporaneously with the events.'},
+{tag:'stat',title:'Civil Evidence Act 1968 s.11 — Convictions',text:'In civil proceedings, proof that a person has been convicted of an offence is <strong>admissible as evidence</strong> that they committed that offence. If they are proved to have been convicted, they are taken to have committed the offence unless the contrary is proved.'},
+]},
+cv22:{title:'CPR 40, 70–73, 89 — Judgments & Enforcement',sub:'Civil Procedure Rules Parts 40, 70–73',refs:[
+{tag:'note',title:'Tomlin orders',text:'A Tomlin order stays proceedings on the terms agreed between the parties, which are set out in a <strong>schedule to the order</strong>. The schedule is confidential. If the defendant breaches the terms, the claimant can apply in the existing proceedings to enforce — no need to start a fresh claim.'},
+{tag:'rule',title:'CPR 71 — Oral examination',text:'A judgment creditor may apply for an order requiring the judgment debtor to attend court and be <strong>examined on oath</strong> about their means and the whereabouts of their assets. Failure to attend is contempt of court.'},
+{tag:'rule',title:'CPR 72 — Third party debt orders',text:'A third party debt order requires a person who owes money to the judgment debtor (e.g. their bank) to pay that money directly to the <strong>judgment creditor</strong>. The order is made in two stages: an interim order, then a final order.'},
+{tag:'rule',title:'CPR 73 — Charging orders',text:'A charging order secures the judgment debt against the debtor\'s interest in land or securities. It does not transfer ownership. To realise the security, the creditor must make a <strong>separate application for an order for sale</strong>.'},
+{tag:'note',title:'Freezing injunction vs enforcement',text:'A <strong>freezing injunction</strong> is NOT an enforcement method — it is a protective remedy preventing dissipation of assets. It does not transfer assets to the creditor. Enforcement methods are: writ/warrant of control, third party debt orders, charging orders, and attachment of earnings.'},
+]},
+cv23:{title:'CPR 44 — Costs',sub:'Civil Procedure Rules Part 44',refs:[
+{tag:'rule',title:'CPR 44.2 — General rule',text:'The court has discretion as to costs. The general rule is that the <strong>unsuccessful party pays the costs</strong> of the successful party. The court may make a different order, having regard to: all the circumstances; the conduct of the parties; whether a party has succeeded on part only of their case; any admissible offer to settle.'},
+{tag:'rule',title:'CPR 44.3 — Basis of assessment',text:'Where costs are assessed on the <strong>standard basis</strong>: proportionate and reasonable costs are allowed; doubt is resolved in favour of the <strong>paying party</strong>. Where assessed on the <strong>indemnity basis</strong>: the proportionality test does not apply; doubt is resolved in favour of the <strong>receiving party</strong>.'},
+{tag:'rule',title:'CPR 44.6 — Summary assessment',text:'The court should generally carry out a <strong>summary assessment</strong> of costs at the conclusion of a hearing which lasts less than one day. Parties must file and serve a statement of costs not less than 24 hours before the hearing.'},
+{tag:'rule',title:'CPR 44.15–44.16 — QOCS',text:'Qualified one-way costs shifting (QOCS) applies in most personal injury cases. A claimant cannot be ordered to pay the defendant\'s costs unless: (a) the claim is struck out (CPR 44.15); or (b) the claimant is found to be <strong>fundamentally dishonest</strong> (CPR 44.16).'},
+{tag:'note',title:'Common interim costs orders',text:'"<strong>Costs in the case</strong>" — the eventual winner gets these costs. "<strong>Costs in any event</strong>" — the receiving party gets them regardless of outcome. "<strong>No order as to costs</strong>" — each party bears their own. "<strong>Costs reserved</strong>" — deferred to a later hearing.'},
+]},
+cv24:{title:'CPR 52 — Appeals',sub:'Civil Procedure Rules Part 52',refs:[
+{tag:'rule',title:'CPR 52.3 — Permission to appeal',text:'Permission to appeal is required in almost all civil cases. Permission will only be given where: (a) the appeal has a <strong>real prospect of success</strong>; or (b) there is some other <strong>compelling reason</strong> for the appeal to be heard.'},
+{tag:'rule',title:'CPR 52.6 — Time for appealing',text:'An appellant must file the appellant\'s notice within <strong>21 days</strong> after the date of the decision being appealed, unless the lower court or appeal court orders otherwise.'},
+{tag:'rule',title:'CPR 52.21 — Determination of appeals',text:'The appeal court will allow an appeal where the decision of the lower court was: (a) <strong>wrong</strong>; or (b) <strong>unjust because of a serious procedural or other irregularity</strong> in the proceedings in the lower court.'},
+{tag:'note',title:'Routes of appeal',text:'District judge (County Court) → <strong>Circuit Judge</strong>. Circuit Judge → <strong>High Court</strong>. High Court Judge → <strong>Court of Appeal</strong>. Second appeals require: an important point of principle or practice, or some other compelling reason.'},
+]},
+cr1:{title:'PACE 1984 — Arrest, Detention & Charging',sub:'Police and Criminal Evidence Act 1984',refs:[
+{tag:'stat',title:'s.41 PACE — Detention time limits',text:'A person shall not be kept in police detention for more than <strong>24 hours</strong> without being charged. A superintendent may authorise extension to <strong>36 hours</strong>. A magistrates\' court may authorise further detention up to a <strong>maximum of 96 hours</strong> in total (for indictable offences only).'},
+{tag:'stat',title:'s.58 PACE — Right to legal advice',text:'A person arrested and held in custody at a police station <strong>shall be entitled</strong>, if they so request, to consult a solicitor privately at any time. This right may be delayed (not denied) for up to 36 hours in serious cases where a superintendent reasonably believes it would prejudice the investigation.'},
+{tag:'stat',title:'s.56 PACE — Right to notify arrest',text:'A person arrested has the right to have one person informed of their whereabouts. This right may also be delayed in serious cases on the authorisation of a superintendent.'},
+{tag:'note',title:'Full Code Test — CPS Code for Crown Prosecutors',text:'The CPS must apply the Full Code Test before charging: <strong>(1) Evidential stage</strong> — is there a realistic prospect of conviction? <strong>(2) Public interest stage</strong> — is prosecution in the public interest? Both stages must be satisfied. The Threshold Test applies where the Full Code Test cannot yet be met but the suspect must be detained.'},
+{tag:'note',title:'Offence classifications',text:'<strong>Summary only</strong>: common assault, criminal damage under £5,000, speeding. <strong>Either-way</strong>: theft, robbery, burglary, ABH, GBH s.20, fraud, most drug offences. <strong>Indictable only</strong>: murder, manslaughter, rape, GBH s.18, robbery with firearm.'},
+]},
+cr2:{title:'Bail Act 1976 & Crime and Disorder Act 1998',sub:'Bail Act 1976, s.51 CDA 1998',refs:[
+{tag:'stat',title:'Bail Act 1976 Sch.1 Pt I — Grounds for refusal',text:'The court may refuse bail for an imprisonable offence if satisfied there are substantial grounds to believe the defendant will: (a) <strong>fail to surrender</strong>; (b) <strong>commit further offences</strong>; or (c) <strong>interfere with witnesses</strong> or obstruct the course of justice.'},
+{tag:'stat',title:'Bail Act 1976 Sch.1 Pt I — Factors',text:'When considering grounds for refusal, the court must have regard to: the nature and seriousness of the offence; the character, antecedents, associations and community ties of the defendant; the defendant\'s record for complying with bail; and the strength of the evidence.'},
+{tag:'stat',title:'s.25 CJPOA 1994 — Bail for murder',text:'A defendant charged with murder may only be granted bail if the court is satisfied that there are <strong>exceptional circumstances</strong> which justify it. This is a very high threshold — mere absence of one of the standard grounds is not sufficient.'},
+{tag:'stat',title:'s.51 Crime and Disorder Act 1998 — Sending',text:'Where an adult appears before a magistrates\' court charged with an <strong>indictable only offence</strong>, the court shall send the defendant forthwith to the Crown Court for trial. This applies at the first hearing — the magistrates have no power to try such offences.'},
+{tag:'stat',title:'Plea Before Venue — Mode of trial',text:'For either-way offences: (1) <strong>Plea Before Venue</strong> — defendant indicates plea. (2) If not guilty, <strong>allocation</strong> — magistrates decide if their powers are adequate. (3) If magistrates accept jurisdiction, defendant may elect Crown Court trial. (4) If magistrates decline — case goes to Crown Court.'},
+]},
+cr3:{title:'CJA 2003 — Hearsay & Bad Character',sub:'Criminal Justice Act 2003 ss.98–134',refs:[
+{tag:'stat',title:'s.114 CJA 2003 — Hearsay admissibility',text:'A hearsay statement is admissible in criminal proceedings as evidence of any matter stated if: (a) a statutory provision makes it admissible; (b) all parties <strong>agree</strong>; (c) the court is satisfied it is in the <strong>interests of justice</strong> to admit it; or (d) it falls within a preserved common law exception.'},
+{tag:'stat',title:'s.116 CJA 2003 — Unavailable witnesses',text:'Hearsay admissible where the witness is: (a) <strong>dead</strong>; (b) unfit due to bodily or mental condition; (c) <strong>outside the UK</strong> and it is not reasonably practicable to secure attendance; (d) cannot be found despite reasonable steps; (e) <strong>in fear</strong> and the court grants leave.'},
+{tag:'stat',title:'s.101(1) CJA 2003 — Bad character gateways',text:'Defendant\'s bad character is admissible through one of 7 gateways: (a) all parties agree; (b) defendant adduces it; (c) important explanatory evidence; (d) relevant to <strong>important matter in issue</strong>; (e) matter in issue between co-defendants; (f) corrects false impression; (g) defendant has <strong>attacked another\'s character</strong>.'},
+{tag:'stat',title:'s.101(3) — Exclusion power',text:'The court <strong>must not admit</strong> evidence under gateway (d) or (g) if it appears that admitting it would have such an adverse effect on the fairness of proceedings that the court ought not to admit it.'},
+{tag:'case',title:'Hanson [2005] EWCA Crim 824',text:'Guidance on gateway (d) propensity evidence: Does the defendant have a propensity to commit offences of the kind charged? Does that propensity make it more likely they committed the offence? Would it be unjust to rely on convictions of the same description or category?'},
+]},
+cr4:{title:'PACE 1984 ss.76–78 & CJPOA 1994',sub:'PACE 1984, Criminal Justice and Public Order Act 1994',refs:[
+{tag:'stat',title:'s.76 PACE — Exclusion of confessions',text:'A confession shall be excluded if the prosecution cannot prove beyond reasonable doubt that it was not obtained: (a) by <strong>oppression</strong> (s.76(2)(a)); or (b) in circumstances which were likely to render any confession <strong>unreliable</strong> (s.76(2)(b)). Oppression includes torture, inhuman treatment, or the exercise of power in a burdensome or harsh manner.'},
+{tag:'stat',title:'s.78 PACE — Exclusion of unfair evidence',text:'The court may refuse to allow evidence if it appears that, having regard to all the circumstances including how the evidence was obtained, <strong>admission would have such an adverse effect on the fairness of proceedings</strong> that the court ought not to admit it.'},
+{tag:'stat',title:'s.34 CJPOA 1994 — Silence at interview',text:'Where, when questioned, a defendant fails to mention a fact they later rely on in their defence, and it was reasonable in the circumstances to have mentioned it, the court or jury <strong>may draw such inferences as appear proper</strong>. A conviction cannot be based solely on an inference from silence (s.38(3)).'},
+{tag:'stat',title:'s.35 CJPOA 1994 — Failure to testify',text:'Where the defendant does not give evidence at trial, the court or jury <strong>may draw such inferences as appear proper</strong> from that failure. The judge must warn the defendant before the close of the prosecution case that inferences may be drawn.'},
+{tag:'case',title:'Turnbull [1977] QB 224',text:'Where the case depends wholly or substantially on disputed visual identification evidence, the judge must warn the jury of the <strong>special need for caution</strong>. The jury must examine the circumstances of the identification carefully using the ADVOKATE factors. Where the identification is of poor quality and unsupported, the judge should withdraw the case from the jury.'},
+]},
+cr5:{title:'Sentencing Act 2020 — Sentencing Principles',sub:'Sentencing Act 2020, Sentencing Council Guidelines',refs:[
+{tag:'stat',title:'s.57 SA 2020 — Purposes of sentencing',text:'The purposes of sentencing adults are: (a) <strong>punishment</strong>; (b) <strong>reduction of crime</strong> (including deterrence); (c) <strong>reform and rehabilitation</strong>; (d) <strong>protection of the public</strong>; (e) <strong>reparation</strong> to those affected. The court must have regard to these purposes when passing sentence.'},
+{tag:'note',title:'Guilty plea discount — Sentencing Council Guideline',text:'A guilty plea at the <strong>first stage of proceedings</strong> attracts a <strong>one third</strong> reduction. A guilty plea at the PTPH (or equivalent) attracts approximately <strong>one quarter</strong>. A guilty plea at the start of trial or very late attracts <strong>one tenth</strong>. The reduction is applied to the sentence that would otherwise have been imposed.'},
+{tag:'case',title:'Newton (1982) 77 Cr App R 13',text:'Where a defendant pleads guilty but disputes the prosecution\'s version of the facts, the judge must either: (a) accept the defence version (if not substantially different); (b) hold a <strong>Newton hearing</strong> to determine the facts; or (c) sentence on the prosecution\'s version (if the defence version is manifestly absurd).'},
+{tag:'stat',title:'s.313 SA 2020 — Minimum sentence (Class A drugs)',text:'For a <strong>third</strong> Class A drug trafficking offence, the court must impose at least <strong>7 years</strong> imprisonment unless it would be unjust to do so in all the circumstances. There is no mandatory minimum for a second offence under s.313.'},
+{tag:'stat',title:'POCA 2002 s.6 — Confiscation orders',text:'The Crown Court must make a confiscation order if the defendant has benefited from criminal conduct and the prosecution applies. The order is made in the <strong>Crown Court only</strong>. The amount is the lesser of: the defendant\'s benefit from crime; and the available amount.'},
+]},
+cr6:{title:'Criminal Appeal Act 1968 — Appeals',sub:'Criminal Appeal Act 1968, Youth Courts',refs:[
+{tag:'stat',title:'s.1 CAA 1968 — Right of appeal from Crown Court',text:'A person convicted on indictment may appeal to the Court of Appeal (Criminal Division) against conviction or sentence, <strong>with leave</strong>. Leave may be granted by the trial judge or (far more commonly) by the Court of Appeal.'},
+{tag:'stat',title:'s.2 CAA 1968 — Allowing appeals against conviction',text:'The Court of Appeal shall allow an appeal against conviction if they think that the conviction is <strong>unsafe</strong>, and shall dismiss such an appeal in any other case.'},
+{tag:'stat',title:'s.36 CJA 1988 — Unduly lenient sentences',text:'The Attorney General may refer a sentence to the Court of Appeal if it appears to be <strong>unduly lenient</strong>. The Court of Appeal may then quash the sentence and impose a more severe one. The defendant is notified of this risk at trial.'},
+{tag:'stat',title:'D29.6 BCP — Appeal from magistrates to Crown Court',text:'An appeal from the magistrates\' court lies to the <strong>Crown Court</strong> by way of complete rehearing. No leave is required, provided notice of appeal is given within <strong>15 business days</strong> of sentence. The Crown Court may confirm, reverse or vary the decision.'},
+{tag:'stat',title:'Youth courts — Grave crimes & DTOs',text:'A youth may be sent to the Crown Court for trial where the offence is a <strong>grave crime</strong> (maximum 14+ years for adults) or where the dangerous offender provisions apply. A <strong>Detention and Training Order</strong> (DTO) may be imposed on offenders aged 12–17 where the custody threshold is met. For those aged 12–14, the court must also find they are persistent offenders.'},
+{tag:'case',title:'Vye [1993] & Hunter [2015]',text:'Where a defendant is of <strong>good character</strong>, the judge must give both: (1) a <strong>credibility direction</strong> — good character supports the believability of the defendant\'s evidence; and (2) a <strong>propensity direction</strong> — good character makes it less likely they committed the offence. Hunter clarified when unmeritorious claims of good character may be excluded.'},
+]},
+};
+
+function getLawRef(wsId){return LAW[wsId]||null;}
+
+function updateRefPanel(wsId,qIdx,total){
+  const ref=getLawRef(wsId);
+  const title=document.getElementById('ref-title');
+  const sub=document.getElementById('ref-sub');
+  const body=document.getElementById('ref-body');
+  const dots=document.getElementById('ref-dots');
+  const s=ws(wsId);
+  if(dots){
+    dots.innerHTML='';
+    for(let i=0;i<total;i++){
+      const d=document.createElement('div');
+      const key=wsId+'_'+i;
+      const answered=s.answers&&s.answers[key]!==undefined;
+      const all=[...CIVIL,...CRIMINAL];
+      const w=all.find(x=>x.id===wsId);
+      let cls='q-dot';
+      if(answered){cls+=s.answers[key]===w.qs[i].ans?' correct':' wrong';}
+      else if(i===qIdx)cls+=' current';
+      d.className=cls;
+      d.textContent=i+1;
+      dots.appendChild(d);
+    }
+  }
+  if(!ref){
+    if(title)title.textContent='Law reference';
+    if(sub)sub.textContent='';
+    if(body)body.innerHTML='<div class="ref-empty">No reference material available for this topic.</div>';
+    return;
+  }
+  if(title)title.textContent=ref.title;
+  if(sub)sub.textContent=ref.sub;
+  if(body){
+    body.innerHTML=ref.refs.map(r=>`
+      <div class="ref-card">
+        <div class="ref-card-tag ${r.tag}">${r.tag==='rule'?'CPR':r.tag==='stat'?'Statute':r.tag==='case'?'Case law':'Note'}</div>
+        <div class="ref-card-title">${r.title}</div>
+        <div class="ref-card-text">${r.text}</div>
+      </div>`).join('');
+  }
+}
+
 load();buildNav();refreshDash();updateCountdowns();setInterval(updateCountdowns,60000);
 const savedDark=localStorage.getItem('btc_dark')==='1';
-if(savedDark){document.documentElement.classList.add('dark');document.getElementById('dark-toggle').checked=true;}
+if(savedDark){document.documentElement.classList.add('dark');const dt=document.getElementById('dark-toggle');if(dt)dt.checked=true;}
 function toggleDark(on){document.documentElement.classList.toggle('dark',on);localStorage.setItem('btc_dark',on?'1':'0');}
 </script>
 </body>
