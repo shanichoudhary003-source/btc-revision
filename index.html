@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Revision Tracker 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f6f2;--surface:#fff;--surface2:#f0ede6;--border:#e2ddd6;--border2:#ccc8c0;--text:#1a1814;--text2:#6b6560;--text3:#a09a94;--accent:#2d4a3e;--accent-light:#e8f0ed;--accent-text:#1e3329;--warn-light:#fdf2e3;--warn:#7a4f1a;--danger-light:#fde8e8;--danger:#7a1a1a;--success-light:#e8f5ee;--success:#1a5c35;--r:8px;--rl:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.6}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;gap:1.25rem}
+.logo-title{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.logo-sub{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em}
+.logo{border-bottom:1px solid var(--border);padding-bottom:1rem}
+.exam-box{background:var(--accent-light);border-radius:var(--r);padding:.75rem}
+.exam-lbl{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-family:'DM Mono',monospace;margin-bottom:.4rem}
+.exam-row{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.exam-name{color:var(--accent-text);font-weight:500}
+.exam-date{font-family:'DM Mono',monospace;color:var(--accent);font-size:11px}
+.cd{font-family:'DM Mono',monospace;font-size:10px;background:var(--accent);color:#fff;padding:1px 5px;border-radius:3px}
+.nav-section{display:flex;flex-direction:column;gap:2px}
+.nav-lbl{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;font-family:'DM Mono',monospace}
+.nav-btn{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--r);cursor:pointer;font-size:12px;color:var(--text2);border:none;background:none;width:100%;text-align:left;transition:all .15s}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:var(--accent);color:#fff;font-weight:500}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.nav-score{font-family:'DM Mono',monospace;font-size:10px;margin-left:auto;padding:1px 5px;border-radius:3px}
+.nav-score.none{background:var(--surface2);color:var(--text3)}
+.nav-score.g{background:var(--success-light);color:var(--success)}
+.nav-score.a{background:var(--warn-light);color:var(--warn)}
+.nav-score.b{background:var(--danger-light);color:var(--danger)}
+.sidebar-footer{margin-top:auto;font-size:11px;color:var(--text3);padding-top:1rem;border-top:1px solid var(--border)}
+.main{padding:2rem;max-width:820px}
+.page{display:none}.page.active{display:block}
+.page-hdr{margin-bottom:1.5rem}
+.page-hdr h1{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.page-hdr p{font-size:13px;color:var(--text2);margin-top:4px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px}
+.stat-lbl{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.stat-val{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.stat-val.g{color:var(--success)}.stat-val.a{color:var(--warn)}.stat-val.r{color:var(--danger)}
+.prog-wrap{background:var(--border);border-radius:2px;height:3px;overflow:hidden}
+.prog-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .5s ease}
+.prog-lbl{font-size:11px;color:var(--text3);margin-top:3px;margin-bottom:1.25rem;font-family:'DM Mono',monospace}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.weak-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.weak-title{font-size:13px;font-weight:500}
+.weak-sub{font-size:11px;color:var(--text3)}
+.weak-score{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--danger)}
+.empty{font-size:13px;color:var(--text3);padding:1.5rem 0;text-align:center}
+.q-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;margin-bottom:1rem}
+.q-num{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:5px}
+.q-text{font-size:13px;color:var(--text);margin-bottom:10px;line-height:1.55}
+.opts{display:flex;flex-direction:column;gap:5px}
+.opt{display:flex;align-items:flex-start;gap:8px;padding:8px 11px;border-radius:var(--r);border:1px solid var(--border);font-size:12px;color:var(--text);cursor:pointer;line-height:1.45;transition:all .15s;background:var(--surface)}
+.opt:hover{background:var(--surface2);border-color:var(--border2)}
+.opt.correct{border-color:#1a5c35;background:var(--success-light);color:var(--success)}
+.opt.wrong{border-color:#7a1a1a;background:var(--danger-light);color:var(--danger)}
+.exp{font-size:12px;color:var(--text2);margin-top:8px;padding:10px 12px;background:var(--surface2);border-radius:var(--r);line-height:1.55;display:none;border-left:3px solid var(--accent)}
+.exp.show{display:block}
+.score-box{margin-top:1rem;padding:12px 16px;background:var(--accent-light);border-radius:var(--rl);display:none;align-items:center;justify-content:space-between;gap:8px;border:1px solid rgba(45,74,62,.15)}
+.score-box.show{display:flex}
+.score-main{font-size:15px;font-weight:600;color:var(--accent-text)}
+.score-sub{font-size:12px;color:var(--accent);margin-top:2px}
+.done-btn{padding:6px 14px;border-radius:var(--r);border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.done-btn:hover{opacity:.85}
+.done-btn.outline{background:transparent;border-color:var(--border2);color:var(--text2)}
+.guide-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.guide-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px}
+.guide-card h3{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace;margin-bottom:.75rem}
+.guide-card p,.guide-card li{font-size:13px;color:var(--text2);line-height:1.65}
+.guide-card ul{padding-left:1rem}
+.guide-card li{margin-bottom:.3rem}
+.wt-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:.5rem}
+.wt-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);font-family:'DM Mono',monospace;padding:5px 8px;text-align:left;border-bottom:1px solid var(--border)}
+.wt-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text2)}
+.wt-table tr:last-child td{border-bottom:none}
+.hi{color:var(--danger);font-weight:600}.med{color:var(--warn);font-weight:500}
+.cases{display:flex;flex-direction:column;gap:.4rem}
+.case-row{font-size:12px;color:var(--text2);display:flex;gap:.5rem}
+.case-row strong{color:var(--text);min-width:130px;flex-shrink:0}
+.topic-actions{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem}
+.section-lbl{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem}
+@media(max-width:680px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border)}.stats-row{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}.guide-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="layout">
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-title">BTC Revision</div>
+    <div class="logo-sub">Criminal · Civil · 2026</div>
+  </div>
+  <div class="exam-box">
+    <div class="exam-lbl">Exam countdown</div>
+    <div class="exam-row"><span class="exam-name">Criminal</span><span class="exam-date">16 Apr</span><span class="cd" id="cd0">—</span></div>
+    <div class="exam-row"><span class="exam-name">Civil Paper 1</span><span class="exam-date">21 Apr</span><span class="cd" id="cd1">—</span></div>
+    <div class="exam-row"><span class="exam-name">Civil Paper 2</span><span class="exam-date">23 Apr</span><span class="cd" id="cd2">—</span></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-lbl">Overview</div>
+    <button class="nav-btn active" onclick="showPage('dash')">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('weak')">Weak spots</button>
+    <button class="nav-btn" onclick="showPage('guide')">Study guide</button>
+  </div>
+  <div class="nav-section" id="nav-civil"><div class="nav-lbl">Civil Litigation</div></div>
+  <div class="nav-section" id="nav-crim"><div class="nav-lbl">Criminal Litigation</div></div>
+  <div class="sidebar-footer">Data saves in your browser automatically.<br>Works fully offline — no login needed.</div>
+</div>
+<div class="main">
+  <div id="page-dash" class="page active">
+    <div class="page-hdr"><h1>Revision Dashboard</h1><p>Your progress across both papers. Click any topic in the sidebar to drill MCQs.</p></div>
+    <div class="stats-row" id="dash-stats"></div>
+    <div class="dash-grid">
+      <div><div class="section-lbl">Civil Litigation</div><div class="prog-wrap"><div class="prog-bar" id="cv-prog"></div></div><div class="prog-lbl" id="cv-lbl"></div></div>
+      <div><div class="section-lbl">Criminal Litigation</div><div class="prog-wrap"><div class="prog-bar" id="cr-prog"></div></div><div class="prog-lbl" id="cr-lbl"></div></div>
+    </div>
+    <div class="section-lbl">Weak spots</div>
+    <div id="dash-weak"></div>
+  </div>
+  <div id="page-weak" class="page">
+    <div class="page-hdr"><h1>Weak Spots</h1><p>Topics scoring below 7. Return to the BPP material for these before re-drilling.</p></div>
+    <div id="weak-list"></div>
+  </div>
+  <div id="page-guide" class="page">
+    <div class="page-hdr"><h1>Study Guide</h1><p>How to use this tracker, Civil question weighting, and key cases you must know by name.</p></div>
+    <div class="guide-grid">
+      <div class="guide-card"><h3>How to study</h3><ul>
+        <li>Read the BPP workshop for the topic first</li>
+        <li>Drill MCQs immediately after — click any topic in the sidebar</li>
+        <li>Read every explanation, including for correct answers</li>
+        <li>Tick the checkbox when fully done</li>
+        <li>Check Weak Spots weekly and return to BPP material only for those</li>
+      </ul></div>
+      <div class="guide-card"><h3>Exam format</h3><ul>
+        <li><strong>Criminal:</strong> 75 MCQs, 3 hrs, closed book — 16 April</li>
+        <li><strong>Civil Paper 1:</strong> Closed book — 21 April</li>
+        <li><strong>Civil Paper 2:</strong> Open book (White Book) — 23 April</li>
+        <li>Every question is scenario-based — you are always in role</li>
+        <li>Four options — pick the single BEST answer</li>
+        <li>No negative marking — attempt every question</li>
+      </ul></div>
+      <div class="guide-card" style="grid-column:span 2"><h3>Civil question weighting (indicative per paper)</h3>
+        <table class="wt-table"><tr><th>Topic</th><th>Questions</th><th>Priority</th></tr>
+        <tr><td>Disclosure &amp; Inspection</td><td class="hi">7</td><td class="hi">Highest</td></tr>
+        <tr><td>Case Management, Sanctions &amp; Striking Out</td><td class="hi">6</td><td class="hi">Highest</td></tr>
+        <tr><td>Settlement incl. Part 36</td><td class="hi">6</td><td class="hi">Highest</td></tr>
+        <tr><td>Costs</td><td class="med">5</td><td class="med">High</td></tr>
+        <tr><td>Commencing Proceedings</td><td class="med">5</td><td class="med">High</td></tr>
+        <tr><td>Expert Evidence</td><td class="med">5</td><td class="med">High</td></tr>
+        <tr><td>Statements of Case / Evidence of Fact / Additional Claims / Default &amp; Summary Judgment / Civil Trial / Judgments &amp; Enforcement</td><td>4 each</td><td>Standard</td></tr>
+        <tr><td>Pre-action Conduct / ADR / Interim Applications / Interim Injunctions / Limitation / Appeals / General Matters</td><td>2–4 each</td><td>Standard</td></tr>
+        </table>
+      </div>
+      <div class="guide-card"><h3>Civil cases — know by name</h3><div class="cases">
+        <div class="case-row"><strong>Halsey &amp; Churchill</strong><span>Court's approach to ADR</span></div>
+        <div class="case-row"><strong>Calderbank</strong><span>Without prejudice save as to costs</span></div>
+        <div class="case-row"><strong>Denton</strong><span>Relief from sanctions — 3-stage test</span></div>
+        <div class="case-row"><strong>American Cyanamid</strong><span>Interim injunction principles</span></div>
+        <div class="case-row"><strong>Norwich Pharmacal</strong><span>Third party disclosure</span></div>
+        <div class="case-row"><strong>Sanderson &amp; Bullock</strong><span>Costs orders against defendants</span></div>
+      </div></div>
+      <div class="guide-card"><h3>Criminal cases — know by name</h3><div class="cases">
+        <div class="case-row"><strong>Galbraith</strong><span>No case to answer test</span></div>
+        <div class="case-row"><strong>Turnbull</strong><span>Visual identification directions</span></div>
+        <div class="case-row"><strong>Lucas</strong><span>Lies direction to jury</span></div>
+        <div class="case-row"><strong>Hanson</strong><span>Bad character — propensity</span></div>
+        <div class="case-row"><strong>Vye &amp; Hunter</strong><span>Good character directions</span></div>
+        <div class="case-row"><strong>Goodyear</strong><span>Sentence indications</span></div>
+        <div class="case-row"><strong>Newton</strong><span>Factual disputes after guilty plea</span></div>
+      </div></div>
+    </div>
+  </div>
+  <div id="page-topic" class="page">
+    <div class="page-hdr"><h1 id="t-title"></h1><p id="t-sub"></p></div>
+    <div class="topic-actions">
+      <button class="done-btn outline" id="t-done-btn" onclick="toggleDone(currentTopic)"></button>
+      <span style="font-size:12px;color:var(--text3)" id="t-score-lbl"></span>
+    </div>
+    <div id="t-questions"></div>
+    <div class="score-box" id="t-score-box">
+      <div><div class="score-main" id="t-score-main"></div><div class="score-sub" id="t-score-sub"></div></div>
+      <button class="done-btn" onclick="toggleDone(currentTopic)">Mark complete ✓</button>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+const CIVIL=[
+{id:'cv1',title:'Topic 1: General Matters',sub:'CPR overriding objective & ADR',syllabus:'SA1',qs:[
+{q:'You represent a claimant in a multi-track case. At a CMC, the judge criticises both parties for failing to consider mediation. She asks you to explain the court\'s duty under CPR 1.4. Which correctly states that duty?',opts:['[A] The court must order mediation before trial in all multi-track cases','[B] The court must actively manage cases, which includes encouraging the parties to use an ADR procedure if it considers that appropriate','[C] The court must refer the matter to mediation whenever one party requests it','[D] The court has no power to compel parties to engage in ADR'],ans:1,exp:'CPR 1.4(2)(e) — the court\'s duty to manage cases includes encouraging the parties to use an ADR procedure if the court considers that appropriate. Churchill confirmed courts can now go further and order ADR in appropriate cases.'},
+{q:'You are advising a defendant who has received a letter of claim. Your client asks whether they must engage in ADR before proceedings are issued. Which is the correct advice?',opts:['[A] There is no obligation whatsoever to engage in ADR at any stage','[B] Your client must engage in ADR or the claim will be automatically struck out','[C] Your client should seriously consider ADR — unreasonable refusal to engage can attract adverse costs consequences even if they win at trial','[D] ADR is only relevant after proceedings have been issued'],ans:2,exp:'Halsey established that unreasonable refusal to engage in ADR can result in adverse costs orders even against a successful party. Silence in the face of an invitation may be treated as unreasonable refusal.'},
+{q:'The overriding objective under CPR 1.1 requires the court to deal with cases justly and at proportionate cost. Under CPR 1.3, who has the duty to help the court further the overriding objective?',opts:['[A] The court alone','[B] The claimant only','[C] The parties and their legal representatives','[D] Legal representatives only'],ans:2,exp:'CPR 1.3 — the parties AND their legal representatives have a duty to help the court further the overriding objective.'},
+{q:'Your client wants to proceed to trial without attempting ADR. Your opponent has invited mediation. The judge asks you to justify declining. Which of the following is the weakest justification?',opts:['[A] The parties are too far apart for mediation to have any prospect of success','[B] Mediation would cause unacceptable delay given the imminent trial date','[C] Your client simply does not want to engage in ADR','[D] ADR was already attempted pre-action and failed'],ans:2,exp:'A party\'s subjective reluctance is the weakest reason. Courts expect objective justification — Halsey lists factors including the merits, costs of ADR, and suitability of the dispute. Simply not wanting to mediate is unlikely to be accepted.'},
+]},
+{id:'cv2',title:'Topic 2: Limitation',sub:'Limitation periods & date of knowledge',syllabus:'SA2',qs:[
+{q:'Your client suffered personal injuries in a road traffic accident on 1 March 2022. She did not instruct you until February 2025. No proceedings have been issued. Which statement about limitation is correct?',opts:['[A] The limitation period expires on 1 March 2025 — proceedings must be issued immediately','[B] The limitation period has not yet expired — you still have time until 1 March 2025','[C] The limitation period for personal injury is 6 years from the date of the accident','[D] The limitation period expired on 1 March 2024'],ans:0,exp:'Section 11 LA 1980 — personal injury claims must be brought within 3 years of the date of accrual or date of knowledge, whichever is later. The accident was 1 March 2022, so the period expires 1 March 2025.'},
+{q:'A claimant instructs you in a professional negligence claim. She suffered financial loss due to negligent advice but did not discover this until years later. Which limitation regime applies?',opts:['[A] 6 years from the date the negligent advice was given, with no exception','[B] 3 years from the date of the personal injury','[C] 3 years from the date of knowledge or 6 years from accrual, whichever is later, subject to a 15-year longstop under ss.14A and 14B LA 1980','[D] 2 years from the date of discovery of the loss'],ans:2,exp:'Sections 14A and 14B Limitation Act 1980 — the claimant has the later of 6 years from accrual or 3 years from date of knowledge, subject to an absolute 15-year longstop from the act of negligence.'},
+{q:'Your client is 15 years old and was injured in an accident. When does the 3-year personal injury limitation period begin to run?',opts:['[A] From the date of the accident','[B] From the date the claimant\'s parent became aware','[C] From the claimant\'s 18th birthday — they have until their 21st birthday to issue','[D] Children cannot bring personal injury claims'],ans:2,exp:'Section 28 LA 1980 — where the claimant is under a disability (including being a minor), limitation is postponed until the disability ceases. For a minor, time starts running from their 18th birthday.'},
+]},
+{id:'cv3',title:'Topic 3: Pre-Action Conduct',sub:'Protocols, compliance & consequences',syllabus:'SA3',qs:[
+{q:'You represent a claimant in a personal injury claim. Under the PI Pre-Action Protocol, how long does the defendant have to acknowledge the letter of claim?',opts:['[A] 7 days','[B] 14 days','[C] 21 days','[D] 3 months'],ans:2,exp:'The PI Protocol requires the defendant to acknowledge the letter of claim within 21 days of posting. Following acknowledgment, the defendant has 3 months to investigate and respond.'},
+{q:'Your opponent failed to comply with the pre-action protocol before issuing. At the costs hearing after trial your opponent argues the breach is irrelevant. Which is correct?',opts:['[A] Protocol breaches cannot affect costs once judgment is entered','[B] The court may take pre-action conduct into account when making costs orders and may order indemnity costs','[C] The court can only sanction protocol breaches by striking out the claim','[D] The court must refer the matter to a costs judge'],ans:1,exp:'Paragraphs 13-16 PD Pre-Action Conduct — the court considers compliance when making costs orders. Non-compliance can result in sanctions including indemnity costs or a stay.'},
+{q:'A claimant receives the defendant\'s letter of response denying liability and wants to issue immediately. What should happen first?',opts:['[A] The claimant may issue immediately — the response has been received','[B] The claimant should carry out a stocktake, consider the list of issues, and explore settlement and ADR before issuing','[C] The claimant must wait a further 3 months','[D] The claimant must obtain a court order before proceeding'],ans:1,exp:'Paragraphs 10-11 PI Protocol and paragraphs 8-11 PD Pre-Action Conduct — even after a response, parties should carry out a stocktake and consider ADR/settlement before issuing.'},
+{q:'Your client wants to instruct a medical expert before issuing a personal injury claim. Must they notify the defendant?',opts:['[A] No — pre-action instruction of experts is entirely at your discretion','[B] Yes — the PI Protocol requires notification and, if possible, an invitation to jointly instruct the expert','[C] Expert evidence is not permitted before proceedings are issued','[D] The defendant must agree before any expert is instructed'],ans:1,exp:'Paragraphs 5-7 PI Protocol — the protocol encourages joint instruction of experts pre-action. The claimant should notify the defendant and, where possible, invite agreement.'},
+]},
+{id:'cv4',title:'Topic 4: ADR — Adjudicative',sub:'Arbitration & expert determination',syllabus:'SA4',qs:[
+{q:'Your clients have a commercial contract dispute with an arbitration clause. Your client wants to ignore it and issue High Court proceedings. Which advice is correct?',opts:['[A] An arbitration clause is unenforceable — either party can choose litigation','[B] The High Court will ignore the clause if the amount exceeds £100,000','[C] If the defendant applies for a stay under section 9 Arbitration Act 1996, the court must grant a stay unless the agreement is null, void, inoperative or incapable of being performed','[D] Your client can proceed — the defendant must prove the clause is valid'],ans:2,exp:'Section 9 Arbitration Act 1996 — on application by a party, the court must stay proceedings unless satisfied the arbitration agreement is null, void, inoperative or incapable of being performed.'},
+{q:'Two businesses have a shareholders\' agreement providing for expert determination of share value disputes. The expert determines the value. One party believes the expert made a serious error of law. Can they challenge the decision?',opts:['[A] Yes — any error of law is a ground for challenge','[B] Generally no — expert determination is final and binding; challenge is only available for fraud or material departure from instructions, not mere error','[C] Yes — appeal to the Court of Appeal within 28 days','[D] No challenge is ever possible'],ans:1,exp:'Expert determination is contractually binding. Unlike arbitration there is no statutory appeal route. Challenge is limited to fraud or material departure from instructions.'},
+{q:'Which type of dispute is generally most suitable for expert determination?',opts:['[A] Disputes involving complex questions of law requiring judicial reasoning','[B] Technical or valuation disputes where the expert\'s own knowledge is the primary tool for resolution','[C] Disputes involving multiple parties with conflicting claims','[D] Personal injury claims'],ans:1,exp:'Expert determination is particularly suited to technical disputes — valuations, accountancy, engineering — where the expert applies their own specialist knowledge.'},
+]},
+{id:'cv5',title:'Topic 5: ADR — Non-Adjudicative',sub:'Mediation, ENE & conciliation',syllabus:'SA5',qs:[
+{q:'Your client is concerned that anything said in mediation could be used against them at trial if it fails. What is the correct advice?',opts:['[A] Mediation is completely public and all statements are admissible','[B] Mediation is confidential and what is said is protected by the without prejudice rule — it cannot be used in subsequent litigation','[C] Only written offers made during mediation are protected','[D] Protection only applies if a confidentiality agreement is signed'],ans:1,exp:'Mediation is conducted on a without prejudice basis — statements made cannot be used in subsequent litigation. This is a fundamental principle underpinning the process.'},
+{q:'A judge orders an Early Neutral Evaluation (ENE) of a disputed technical issue. Which correctly describes ENE?',opts:['[A] ENE is a binding determination by a neutral third party','[B] ENE produces a non-binding evaluation of the merits — its purpose is to help parties settle by giving a realistic view of the outcome','[C] ENE is only available in the Court of Appeal','[D] ENE is the same as a Newton hearing'],ans:1,exp:'ENE produces a non-binding evaluation by a neutral evaluator. It is designed to assist settlement, not to decide the case.'},
+{q:'You are a mediator. At a critical point, one party makes a disclosure in private caucus that they do not want shared with the other side. What is the correct approach?',opts:['[A] You must disclose all information to both parties','[B] You can share the information — there is no duty of confidentiality in caucus','[C] You must maintain the confidence — information shared in caucus is confidential to you unless the party expressly authorises disclosure','[D] You must disclose the information to the court'],ans:2,exp:'In mediation, the mediator maintains confidentiality of information shared in private sessions (caucuses) unless the party expressly authorises disclosure. This is a core ethical obligation.'},
+]},
+{id:'cv6',title:'Topic 6: Commencing Proceedings',sub:'Part 7 procedure, validity & service',syllabus:'SA6',qs:[
+{q:'You serve a claim form by first class post on a Monday. When is the claim form deemed to have been served under CPR 6.14?',opts:['[A] The day it is posted','[B] The second business day after posting','[C] The fourth business day after posting','[D] Seven days after posting'],ans:1,exp:'CPR 6.14 — a claim form served by first class post is deemed served on the second business day after posting.'},
+{q:'Your client wants to serve a claim form on a private individual who has not given an address for service. Where should the claim form be served?',opts:['[A] At the defendant\'s last known address','[B] At the defendant\'s usual or last known residence','[C] At any address the defendant is known to have visited in the last 12 months','[D] Service cannot be effected without the defendant\'s consent'],ans:1,exp:'CPR 6.9 — where the defendant is an individual who has not given an address for service, the claim form must be served at their usual or last known residence.'},
+{q:'You issue a claim form on 1 April. The defendant is within the jurisdiction. What is the last date on which the claim form can validly be served?',opts:['[A] 1 June','[B] 1 July','[C] 1 August','[D] 1 October'],ans:2,exp:'CPR 7.5(1) — a claim form must be served within 4 months of the date of issue. Issued 1 April + 4 months = 1 August.'},
+{q:'You have issued a claim form but the defendant is evading service. The 4-month validity period is about to expire. What should you do?',opts:['[A] Nothing — the claim automatically renews','[B] Apply under CPR 7.6 for an order extending validity before it expires','[C] Issue a fresh claim form','[D] Apply for summary judgment immediately'],ans:1,exp:'CPR 7.6 — if the claim form cannot be served within 4 months, the claimant must apply for an extension before validity expires. The court applies the criteria strictly.'},
+{q:'A client wishes to bring a personal injury claim worth £18,000. Where should the claim be issued?',opts:['[A] High Court only','[B] County Court — personal injury claims up to £50,000 must be issued in the County Court','[C] Magistrates\' court','[D] Either court — the claimant has an unfettered choice'],ans:1,exp:'Personal injury claims must be issued in the County Court unless the value exceeds £50,000 (article 5 High Court and County Courts Jurisdiction Order 1991).'},
+]},
+{id:'cv7',title:'Topic 7: Parties',sub:'Partnerships, companies, children & protected parties',syllabus:'SA7',qs:[
+{q:'You represent a claimant who wishes to sue a firm of solicitors constituted as a general partnership. How should the claim be brought?',opts:['[A] Against each individual partner personally by name','[B] In the name of the partnership under CPR 7.2A','[C] Only against the managing partner','[D] A partnership cannot be sued'],ans:1,exp:'CPR 7.2A and PD7A paragraph 7 — a partnership may be sued in the firm\'s name.'},
+{q:'A claim is brought on behalf of a 10-year-old child injured at school. The child\'s mother wishes to conduct the litigation. Which is correct?',opts:['[A] The child can bring the claim in their own name','[B] The child requires a litigation friend — the mother can act in that role if she satisfies the conditions in CPR 21.4','[C] The child\'s claim must be brought by the Official Solicitor','[D] The child cannot sue until they turn 18'],ans:1,exp:'CPR 21.1-21.4 — a child (under 18) must have a litigation friend to conduct proceedings on their behalf.'},
+]},
+{id:'cv8',title:'Topic 8: Statements of Case',sub:'Claim forms, particulars, defences & replies',syllabus:'SA8',qs:[
+{q:'You are drafting particulars of claim in a personal injury case. Under CPR 16.4, which of the following MUST be included?',opts:['[A] A list of all witnesses the claimant intends to call','[B] A concise statement of facts relied on, the remedy sought, plus a schedule of loss and brief medical history in a PI claim','[C] Counsel\'s advice on the merits','[D] Evidence of the claimant\'s financial position'],ans:1,exp:'CPR 16.4 and PD 16 — particulars of claim must include a concise statement of facts, the remedy claimed, and in a PI claim, a schedule of loss and a brief description of the injuries.'},
+{q:'The claimant\'s particulars of claim make an allegation that your client\'s defence does not address. Under CPR 16.5, what is the effect?',opts:['[A] No effect — the defendant only needs to deny matters they specifically disagree with','[B] The allegation is deemed to be admitted','[C] The defence is automatically struck out','[D] The claimant obtains default judgment automatically'],ans:1,exp:'CPR 16.5(5) — a defendant who fails to deal with an allegation shall be taken to admit it. Every allegation must be specifically admitted, denied, or stated not to be known.'},
+{q:'A defendant files their defence 32 days after service of the particulars, having filed an acknowledgment of service within 14 days. Is the defence in time?',opts:['[A] Yes — where an acknowledgment is filed, the defendant has 28 days and 32 days is within that','[B] No — all defences must be filed within 14 days of service','[C] No — where an acknowledgment is filed, the defendant has 28 days from service; 32 days is out of time','[D] Yes — defences can be filed at any time before trial'],ans:2,exp:'CPR 15.4 — if the defendant files an acknowledgment of service, the period for filing a defence is 28 days from service of the particulars. 32 days > 28 days, so the defence is out of time.'},
+{q:'The defendant has filed a defence denying liability. Does the claimant need to file a reply under CPR 15.8?',opts:['[A] Yes — a reply must always be filed','[B] No — a reply is optional; if the claimant does not file one they are not taken to admit the defence','[C] No — a reply is optional but failure to file means admitting the defence','[D] Yes — without a reply the claimant loses the right to challenge the defence'],ans:1,exp:'CPR 15.8 — a claimant who does not file a reply is not taken to admit the matters alleged in the defence. A reply is optional.'},
+]},
+{id:'cv9',title:'Topic 9: Additional Claims',sub:'Counterclaims, contribution & Part 20',syllabus:'SA9',qs:[
+{q:'Your client has a counterclaim against the claimant arising from a different transaction. Under CPR 20.4, can your client bring this without permission?',opts:['[A] No — permission is always required','[B] Yes — a defendant may counterclaim without permission if served at the same time as the defence','[C] Yes — a counterclaim can be issued at any time without permission','[D] No — a counterclaim must be a separate claim'],ans:1,exp:'CPR 20.4 — a defendant may make a counterclaim without the court\'s permission if filed at the same time as the defence.'},
+{q:'A defendant believes a subcontractor is responsible for the claimant\'s loss. What is required to bring them into the proceedings?',opts:['[A] The claimant\'s consent','[B] Issue an additional claim under CPR 20.7 — no permission needed if served with the defence, permission required if later','[C] A fresh claim form in separate proceedings','[D] The third party automatically becomes a party when named in the defence'],ans:1,exp:'CPR 20.7 — a defendant may issue an additional claim against a person not already a party. No permission is needed if served with the defence; permission is required thereafter.'},
+{q:'Your client wants to make a contribution or indemnity claim against a co-defendant. Under CPR 20.6, what procedure applies?',opts:['[A] Issue separate proceedings against the co-defendant','[B] File a notice without the court\'s permission, provided it is filed before or at the same time as the defence','[C] Obtain the claimant\'s consent','[D] The court will automatically join the co-defendant'],ans:1,exp:'CPR 20.6 — a defendant may make a Part 20 claim for contribution or indemnity against another party without permission, provided it is filed before or at the same time as the defence.'},
+{q:'A Part 20 claim has been served on a third party. What is the effect of service?',opts:['[A] The third party automatically becomes a defendant in the main proceedings','[B] Service makes the third party a party to the proceedings with the same obligations as any other defendant','[C] The third party is only affected if the court makes a specific joining order','[D] The third party has no obligation to respond unless they choose to'],ans:1,exp:'CPR 20.9 — service of an additional claim form on the third party makes them a party to the proceedings. They must file an acknowledgment or defence.'},
+]},
+{id:'cv10',title:'Topic 10: Amendment',sub:'Permission, consent & limitation',syllabus:'SA10',qs:[
+{q:'You identify a drafting error in a claim form before serving it. Under CPR 17.1, can you amend without permission?',opts:['[A] No — all amendments require permission','[B] Yes — a party may amend once without permission before the statement of case has been served','[C] Yes — but only within 7 days of issue','[D] No — you must issue a fresh claim form'],ans:1,exp:'CPR 17.1(1) — a party may amend their statement of case without permission at any time before it has been served.'},
+{q:'After service, your client wishes to add a new cause of action for which the limitation period has expired. Under CPR 17.4, what must be shown?',opts:['[A] The amendment is impossible once limitation has expired','[B] The new claim must arise out of the same facts or substantially the same facts as the original claim','[C] The other party must consent','[D] Only the trial judge can allow this'],ans:1,exp:'CPR 17.4 — where an amendment would add a new claim after the expiry of limitation, the court may only allow it if the new claim arises out of the same facts or substantially the same facts.'},
+]},
+{id:'cv11',title:'Topic 11: Further Information',sub:'Requests, responses & statements of truth',syllabus:'SA11',qs:[
+{q:'The defendant\'s defence is vague about the basis of their denial. Under CPR 18, what can you do?',opts:['[A] Apply immediately for summary judgment','[B] Send a request for further information — if no adequate response, apply for a court order requiring it','[C] File an amended reply setting out what you think the defence means','[D] Report the matter to the judge without giving the defendant an opportunity to clarify'],ans:1,exp:'CPR 18.1 — a party may request further information or clarification. A preliminary written request should be sent first. If inadequate response, apply for a court order.'},
+{q:'Your client receives a Part 18 request. The response must include a statement of truth. What is the consequence of signing a false statement?',opts:['[A] No consequence — statements of truth in Part 18 responses are not binding','[B] The party signing may be in contempt of court','[C] The response is automatically disregarded','[D] The other party can immediately apply for the case to be struck out'],ans:1,exp:'CPR 32.14 — proceedings for contempt of court may be brought against a person who makes a false statement in a document verified by a statement of truth.'},
+]},
+{id:'cv12',title:'Topic 12: Default & Summary Judgment',sub:'Obtaining, setting aside & the no real prospect test',syllabus:'SA12',qs:[
+{q:'Your client issued a claim for a specified sum. The defendant failed to acknowledge service or file a defence. How should your client obtain default judgment?',opts:['[A] By making an application supported by a witness statement','[B] By filing a request — judgment can be entered administratively without a hearing','[C] By applying to the judge at the next hearing','[D] By sending the court a letter'],ans:1,exp:'CPR 12.4 — default judgment for a specified sum may be obtained by filing a request (N225) without a hearing.'},
+{q:'Default judgment has been entered against your client by request. Your client wishes to have it set aside. Under CPR 13.3, what must they show?',opts:['[A] Only that they have a defence with some prospect of success','[B] That the judgment was wrongly entered','[C] Either that the judgment was wrongly entered (mandatory) OR a real prospect of success defending AND a good explanation for the default (discretionary)','[D] That the claimant failed to mitigate their loss'],ans:2,exp:'CPR 13.2 — mandatory set aside where judgment was wrongly entered. CPR 13.3 — discretionary set aside requires: real prospect of success OR some other good reason, AND the defendant acted promptly.'},
+{q:'You apply for summary judgment against the defendant under CPR 24. What is the correct test?',opts:['[A] Whether the defendant is likely to succeed at trial on the balance of probabilities','[B] Whether the defendant has no real prospect of successfully defending AND there is no other compelling reason for a trial','[C] Whether the defendant can show they definitely have a defence','[D] Whether the case is suitable for the fast track'],ans:1,exp:'CPR 24.2 — summary judgment where the defendant has no real prospect of successfully defending AND there is no other compelling reason why the case should be disposed of at trial.'},
+{q:'On a summary judgment application, the defendant argues evidence supporting their defence will emerge after further disclosure. What should the court do?',opts:['[A] Dismiss this — summary judgment is final','[B] Grant summary judgment immediately','[C] Consider whether there is a compelling reason for trial — specifically that evidence might reasonably be expected to be available','[D] Stay proceedings to allow the defendant to obtain the evidence'],ans:2,exp:'CPR 24.2(b) — even where the claim appears to have no real prospect, if there is a compelling reason for trial (including that evidence can reasonably be expected to become available), the court may decline summary judgment.'},
+]},
+{id:'cv13',title:'Topic 13: Case Management & Sanctions',sub:'Tracks, allocation, Denton & striking out',syllabus:'SA13',qs:[
+{q:'A claimant\'s claim is worth £22,000 and involves a single contested issue of liability. To which track should the case be allocated?',opts:['[A] Small claims track','[B] Fast track','[C] Intermediate track','[D] Multi-track'],ans:1,exp:'CPR 26.9 — the fast track covers claims over £10,000 but not more than £25,000 which are not suitable for the small claims track.'},
+{q:'Your client missed the deadline for filing their costs budget. No relief application was made. Under CPR 3.14, what is the consequence?',opts:['[A] The case is struck out automatically','[B] The party is treated as having filed a budget comprising only court fees','[C] A costs penalty of 25%','[D] The CCMC is adjourned with a warning'],ans:1,exp:'CPR 3.14 — where a party fails to file a budget, they are treated as having filed a budget limited to applicable court fees only. This is a severe sanction.'},
+{q:'Your client failed to comply with a court order to file witness statements. They apply for relief from sanctions under CPR 3.9. What three-stage test applies under Denton?',opts:['[A] Consider prejudice, consider the reason, apply proportionality','[B] Assess the seriousness and significance of the breach; consider why the default occurred; evaluate all the circumstances so as to deal justly with the application','[C] Consider whether the breach was intentional, assess the merits, consider public interest','[D] Apply the overriding objective, consider costs, consider delay'],ans:1,exp:'Denton v TH White [2014] — three stages: (1) how serious and significant was the breach? (2) why did it occur? (3) evaluate all the circumstances. This is the leading case on CPR 3.9.'},
+{q:'You apply to strike out the defendant\'s defence under CPR 3.4(2). On which grounds can the court strike out?',opts:['[A] Only if the defendant has failed to comply with a court order','[B] Where it discloses no reasonable grounds for defending, is an abuse of process, or there has been failure to comply with a rule, PD or order','[C] Only where the case has no merit on the facts','[D] Where the opposing party does not consent'],ans:1,exp:'CPR 3.4(2) — the court may strike out where the statement of case discloses no reasonable grounds, is an abuse of the process, or where there has been failure to comply with a rule, practice direction or court order.'},
+{q:'Your client served their defence 5 days late without obtaining an extension. No relief application was made. Under the Denton approach, how should the court treat this?',opts:['[A] Treat it as serious and automatically refuse relief','[B] Consider all three Denton stages — a 5-day delay may be minor and non-significant; if so the court may grant relief without detailed inquiry into reason','[C] Automatically grant relief — a 5-day delay is never serious','[D] Refer the matter to the Court of Appeal'],ans:1,exp:'Under Denton — at stage 1, if the breach is not serious or significant, the court may grant relief without detailed further analysis. A short delay causing no prejudice may not be serious.'},
+{q:'A claimant wishes to discontinue after the defendant has filed a defence. Under CPR 38, what are the costs consequences?',opts:['[A] No automatic costs consequences','[B] The claimant is liable for the defendant\'s costs to the date of discontinuance, unless the court orders otherwise','[C] The claimant must pay indemnity costs','[D] Discontinuance is not permitted once a defence has been filed'],ans:1,exp:'CPR 38.6 — unless the court orders otherwise, a claimant who discontinues is liable for the defendant\'s costs of the proceedings up to the date of service of the notice of discontinuance.'},
+]},
+{id:'cv14',title:'Topic 14: Disclosure & Inspection',sub:'Standard disclosure, privilege & without prejudice',syllabus:'SA14',qs:[
+{q:'In a multi-track case, what does standard disclosure under CPR 31.6 require?',opts:['[A] All documents in possession relating to the case','[B] Documents relied on, documents adversely affecting own case, documents adversely affecting another party\'s case, and documents supporting another party\'s case','[C] Only documents the party intends to rely on at trial','[D] Documents the court specifically requests'],ans:1,exp:'CPR 31.6 — standard disclosure: (a) documents relied on; (b) adversely affecting own case; (c) adversely affecting another party\'s case; (d) supporting another party\'s case.'},
+{q:'You identify a document clearly helping the defendant\'s case and undermining your client\'s. Your client asks you to withhold it. What should you advise?',opts:['[A] You can withhold it — there is no obligation to disclose documents harming your case','[B] The document falls within standard disclosure — your client must disclose it; you cannot assist them in withholding disclosable documents','[C] You can withhold it if you consider it irrelevant','[D] You can withhold it pending a specific disclosure application'],ans:1,exp:'CPR 31.6(b) — a party must disclose documents which adversely affect their own case. A solicitor who assists in withholding disclosable documents risks contempt and professional misconduct.'},
+{q:'A party has inadvertently allowed inspection of a privileged document. Under CPR 31.20, what can the disclosing party do?',opts:['[A] Once inspected, privilege is permanently waived','[B] The disclosing party may apply for an injunction to prevent further use of the document','[C] The document must be returned immediately or it constitutes contempt','[D] Inadvertent disclosure has no legal consequences'],ans:1,exp:'CPR 31.20 — where a privileged document is inadvertently disclosed, the disclosing party may apply for an order preventing use. Privilege is not automatically waived.'},
+{q:'Your client believes the defendant has failed to disclose documents that must exist. Under CPR 31.12, what can you do?',opts:['[A] Apply for an order for specific disclosure','[B] Invite the defendant to re-do standard disclosure','[C] Apply immediately to strike out the defendant\'s case','[D] Write to the court informing them of your suspicion'],ans:0,exp:'CPR 31.12 — the court may make an order for specific disclosure requiring a party to disclose documents it has not yet disclosed.'},
+{q:'You act for a third party served with a CPR 31.17 application for disclosure. Which test must be satisfied?',opts:['[A] The documents must be in your client\'s possession and the applicant must simply request them','[B] The documents must be likely to support the applicant\'s case or adversely affect another party\'s case; and disclosure must be necessary to fairly dispose of the claim or save costs','[C] All parties must consent','[D] The third party must have been joined as a party'],ans:1,exp:'CPR 31.17 — for third party disclosure: (a) documents likely to support the applicant\'s case or adversely affect another party\'s case; and (b) disclosure necessary to fairly dispose of proceedings or save costs.'},
+{q:'Communications between your client and their solicitor were made for the purpose of obtaining legal advice. The defendant seeks disclosure. Can these be withheld?',opts:['[A] No — all communications with a solicitor must be disclosed','[B] Yes — they are protected by legal advice privilege','[C] Only if made after proceedings were issued','[D] Only if the client specifically objects'],ans:1,exp:'Legal advice privilege protects confidential communications between lawyer and client made for the dominant purpose of giving or receiving legal advice. They are exempt from disclosure under CPR 31.3(1)(a).'},
+{q:'Your client received a without prejudice settlement offer. The defendant now argues it was not truly without prejudice as negotiations had broken down. Can the letter be disclosed on liability?',opts:['[A] Yes — the without prejudice label is not determinative','[B] If made in a genuine attempt to settle, it is protected and cannot be adduced on liability','[C] Without prejudice letters are always admissible if one party consents','[D] A without prejudice letter can always be shown to the judge on costs'],ans:1,exp:'The without prejudice rule protects genuine settlement negotiations from disclosure on liability. The label is not conclusive — what matters is whether the communication was a genuine attempt to settle.'},
+]},
+{id:'cv15',title:'Topic 15: Interim Applications',sub:'Notice, documentation & without notice duty',syllabus:'SA15',qs:[
+{q:'You are making a without notice application for an interim injunction. What duty does your client owe to the court?',opts:['[A] No special duty','[B] A duty of full and frank disclosure — all material facts must be disclosed, including those adverse to your client','[C] A duty to disclose only documents supporting the application','[D] A duty to inform the defendant immediately after the order is made'],ans:1,exp:'On without notice applications, the applicant owes a duty of full and frank disclosure — all material facts must be brought to the court\'s attention. Failure can lead to discharge of the order.'},
+{q:'Under CPR 23.7, what is the minimum period of notice required for an interim application?',opts:['[A] 2 clear days','[B] 3 clear days','[C] 7 clear days','[D] 14 clear days'],ans:1,exp:'CPR 23.7(1) — an application notice must be served at least 3 clear days before the court is to deal with the application.'},
+{q:'In which circumstances may an interim application be made without serving the application notice?',opts:['[A] It is never permitted','[B] Where there is exceptional urgency, where giving notice would defeat the purpose, or where the court dispenses with the requirement','[C] Only where the respondent has previously failed to comply with a court order','[D] Only with the consent of all parties'],ans:1,exp:'CPR 25.3 — a without notice application may be made where there is exceptional urgency, where the overriding objective is best furthered by doing so, or where giving notice would defeat the purpose.'},
+]},
+{id:'cv16',title:'Topic 16: Interim Payments & Security',sub:'Conditions for interim payments & security for costs',syllabus:'SA16',qs:[
+{q:'Liability in a personal injury claim is admitted. Your client urgently needs funds for rehabilitation. On what grounds can you apply for an interim payment under CPR 25.7?',opts:['[A] Only if the defendant consents','[B] Where the defendant has admitted liability, or the court is satisfied the claimant would obtain judgment for a substantial sum','[C] Only after allocation to a track','[D] Only in PI claims worth more than £100,000'],ans:1,exp:'CPR 25.7 — interim payment order where the defendant has admitted liability, claimant has obtained judgment for damages to be assessed, or the court is satisfied the claimant would obtain judgment for a substantial sum.'},
+{q:'A defendant applies for security for costs against an insolvent claimant company. Which CPR 25.27 condition does this engage?',opts:['[A] Condition (b)(i) — ordinarily resident out of the jurisdiction','[B] Condition (b)(ii) — reason to believe the company will be unable to pay the defendant\'s costs','[C] Condition (b)(vi) — the claimant has taken steps to make enforcement difficult','[D] This is not a ground'],ans:1,exp:'CPR 25.27(1)(b)(ii) — one ground is that there is reason to believe the claimant company will be unable to pay the defendant\'s costs if ordered to do so.'},
+]},
+{id:'cv17',title:'Topic 17: Interim Injunctions',sub:'American Cyanamid, balance of convenience & undertakings',syllabus:'SA17',qs:[
+{q:'You are applying for an interim injunction. The judge asks you to address American Cyanamid. What is the first question the court must ask?',opts:['[A] Whether the claimant will definitely win at trial','[B] Whether there is a serious question to be tried — whether the claim is not frivolous or vexatious','[C] Whether the defendant has means to pay damages','[D] Whether the matter has been through pre-action ADR'],ans:1,exp:'American Cyanamid [1975] — the first question is whether there is a serious question to be tried. The court does not examine merits in detail at the interim stage.'},
+{q:'The court finds there is a serious question to be tried. The claimant argues damages would not adequately compensate because the defendant is insolvent. How does the court proceed?',opts:['[A] Automatically grant the injunction','[B] Move to the balance of convenience — consider whether granting or refusing would cause greater irremediable harm','[C] Refuse the injunction — insolvency is not a basis for granting one','[D] Order the defendant to provide security'],ans:1,exp:'American Cyanamid — if damages would not adequately compensate the claimant, the court considers the balance of convenience, asking which course would cause the least irremediable harm.'},
+{q:'Your client agrees to give an undertaking in damages as a condition of the injunction. What does this mean?',opts:['[A] Your client pays the defendant\'s legal costs if they lose at trial','[B] Your client promises to compensate the defendant if the injunction is ultimately found to have been wrongly granted','[C] Your client pays into court a sum of money before the injunction is made','[D] Your client waives their right to costs if they win at trial'],ans:1,exp:'The cross-undertaking in damages — the claimant promises to compensate the defendant if the injunction is ultimately found to have been improperly granted.'},
+]},
+{id:'cv18',title:'Topic 18: Settlement & Part 36',sub:'Part 36 offers, Calderbank & cost consequences',syllabus:'SA18',qs:[
+{q:'A defendant makes a Part 36 offer of £50,000. The claimant rejects it. At trial, the claimant is awarded £45,000. What are the costs consequences under CPR 36.17(3)?',opts:['[A] The claimant gets all their costs throughout','[B] The defendant pays the claimant\'s costs up to expiry of the relevant period; the claimant must pay the defendant\'s costs from that date','[C] The defendant pays all costs','[D] There are no costs consequences'],ans:1,exp:'CPR 36.17(3) — where the claimant fails to obtain a judgment more advantageous than the defendant\'s Part 36 offer, the claimant must pay the defendant\'s costs from the date the relevant period expired.'},
+{q:'A claimant makes a Part 36 offer of £60,000. At trial they are awarded £65,000 — beating their own offer. What additional consequences apply under CPR 36.17(4)?',opts:['[A] No additional consequences','[B] Indemnity costs from expiry of the relevant period, enhanced interest up to 10% above base rate on damages and costs, and an additional amount capped at £75,000','[C] Double damages','[D] Interest at 25% above base rate'],ans:1,exp:'CPR 36.17(4) — claimant beating own offer: (a) interest up to 10% above base rate on sum awarded; (b) indemnity costs from expiry of relevant period; (c) interest on those costs; (d) additional amount not exceeding £75,000.'},
+{q:'A defendant makes a valid Part 36 offer. The claimant wants to accept it 25 days after it was made (relevant period was 21 days). Can they still accept?',opts:['[A] No — the offer expires after the relevant period','[B] Yes — a Part 36 offer may be accepted at any time unless it has been withdrawn','[C] Yes — but only with the defendant\'s consent','[D] No — acceptance after the relevant period requires a court order'],ans:1,exp:'CPR 36.11(2) — a Part 36 offer may be accepted at any time, even after the relevant period has expired, unless the offeror has withdrawn it.'},
+{q:'Under CPR 36.5, which of the following is a formal requirement of a valid Part 36 offer?',opts:['[A] It must be expressed as inclusive of interest','[B] It must be in writing, state it is a Part 36 offer, specify the relevant period (at least 21 days), and state whether it relates to the whole or part of the claim','[C] It must be accompanied by a draft consent order','[D] It must be approved by counsel'],ans:1,exp:'CPR 36.5 — a Part 36 offer must: (a) be in writing; (b) state it is a Part 36 offer; (c) specify a relevant period of at least 21 days; (d) state whether it relates to the whole claim or part. No requirement to be expressed inclusive of interest.'},
+{q:'How does a Calderbank offer differ from a Part 36 offer?',opts:['[A] A Calderbank offer is binding on acceptance; a Part 36 offer is not','[B] A Calderbank offer can be disclosed to the judge on costs but not on liability — it does not carry the automatic cost consequences of Part 36','[C] A Calderbank offer cannot be made before proceedings are issued','[D] There is no difference'],ans:1,exp:'A Calderbank offer is protected from disclosure on liability but can be shown to the judge on costs. Unlike Part 36, it does not carry automatic cost consequences — the court exercises its discretion.'},
+{q:'Your client wants to withdraw a Part 36 offer made 10 days ago. The relevant period (21 days) has not yet expired. Under CPR 36.10, can they withdraw?',opts:['[A] Yes — a Part 36 offer can be withdrawn at any time','[B] No — during the relevant period the offeror cannot withdraw or change the terms to be less advantageous without the court\'s permission','[C] Yes — but only if the claimant has rejected it in writing','[D] Yes — withdrawal is effective from the date it is communicated'],ans:1,exp:'CPR 36.10 — during the relevant period, the offeror cannot withdraw or change the terms of the Part 36 offer to be less advantageous without the court\'s permission.'},
+]},
+{id:'cv19',title:'Topic 19: Evidence of Fact',sub:'Witness statements, summonses & notices to admit',syllabus:'SA19',qs:[
+{q:'Under CPR 32.5, a witness statement served for use at trial stands as evidence in chief. What does this mean in practice?',opts:['[A] The witness does not attend court','[B] The witness\'s statement is read aloud in full by the judge','[C] The witness confirms their statement and is then immediately available for cross-examination, without oral examination in chief','[D] The witness must re-read their whole statement under oath before cross-examination'],ans:2,exp:'CPR 32.5 — the witness statement stands as evidence in chief. The witness confirms it and adopts it. They are then cross-examined.'},
+{q:'You need a witness to attend trial but they are reluctant. Under CPR 34.2-34.4, how can you compel attendance?',opts:['[A] You can only ask politely — there is no mechanism to compel a civilian witness','[B] You can obtain a witness summons requiring the witness to attend and/or produce documents','[C] You can apply for a bench warrant','[D] You can ask the judge to draw adverse inferences from the witness\'s absence'],ans:1,exp:'CPR 34.2-34.4 — a witness summons may be issued requiring a person to attend court to give evidence or produce documents. Failure to comply is contempt.'},
+{q:'A party gives a witness statement containing a statement of truth which they know to be false. Under CPR 32.14, what can happen?',opts:['[A] Nothing — false witness statements are only relevant to credibility','[B] Contempt proceedings may be brought against the maker','[C] The evidence is automatically excluded','[D] The party loses the right to call any witnesses'],ans:1,exp:'CPR 32.14 — proceedings for contempt of court may be brought against a person who makes a false statement in a document verified by a statement of truth without an honest belief in its truth.'},
+{q:'Your opponent has served a witness statement from a witness who will not attend trial. Under CPR 33.4, what can you do to challenge their credibility?',opts:['[A] Nothing — you cannot challenge a witness who does not attend','[B] Apply to call the witness for cross-examination on the hearsay statement','[C] Object to the statement being admitted — hearsay is inadmissible in civil proceedings','[D] Apply immediately to strike out the statement'],ans:1,exp:'CPR 33.4 — any other party may apply to call the maker of a hearsay statement for cross-examination on its contents. Hearsay is admissible in civil proceedings under the Civil Evidence Act 1995.'},
+]},
+{id:'cv20',title:'Topic 20: Expert Evidence',sub:'Permission, single joint experts & expert duty',syllabus:'SA20',qs:[
+{q:'In a fast track PI claim, each party wishes to instruct their own medical expert. Under CPR 35.7, what approach is the court likely to take?',opts:['[A] Allow each party their own expert without question','[B] Direct that evidence on the medical issues be given by a single joint expert, unless there is good reason to permit separate experts','[C] Refuse to allow any expert evidence on the fast track','[D] Allow separate experts but limit oral evidence'],ans:1,exp:'CPR 35.7 — where two or more parties wish to submit expert evidence on a particular issue, the court may direct that evidence is to be given by one expert only. Single joint experts are strongly preferred on the fast track.'},
+{q:'The defendant\'s solicitor sends written questions to your expert under CPR 35.6. When must these be submitted and for what purpose?',opts:['[A] At any time during proceedings, for any purpose','[B] Within 28 days of service of the expert\'s report, and only for the purpose of clarification','[C] Only at trial, through the judge','[D] Within 14 days of the expert\'s appointment'],ans:1,exp:'CPR 35.6 — written questions must be put within 28 days of service of the expert\'s report. The questions must be for the purpose of clarification only.'},
+{q:'What is the expert witness\'s overriding duty in civil proceedings?',opts:['[A] To support the case of the party who instructed them','[B] To give independent assistance to the court by way of objective unbiased opinion — their duty is to the court, not to the instructing party','[C] To reach a compromise opinion between the parties','[D] To agree with any joint statement agreed by the experts'],ans:1,exp:'CPR 35.3 — an expert\'s overriding duty is to help the court on matters within their expertise. This overrides any obligation to the instructing party.'},
+{q:'The court directs a meeting between the parties\' experts without legal representatives. Under CPR 35.12, what is the purpose?',opts:['[A] To agree a settlement','[B] To identify issues on which experts agree and disagree, and to narrow the issues for trial','[C] To produce a single joint report','[D] To decide who has the better opinion'],ans:1,exp:'CPR 35.12 — expert discussions are for the purpose of identifying and discussing expert issues and, where possible, reaching agreed opinion. The outcome is a statement of matters agreed and not agreed.'},
+{q:'An expert report has been prepared without the court\'s permission. The party seeks to rely on it at trial. Under CPR 35.4, what is the position?',opts:['[A] Expert evidence can be used freely','[B] Expert evidence may only be used with the court\'s permission — without it, the report cannot be adduced','[C] The expert must attend trial in person','[D] The report may be used only as hearsay evidence'],ans:1,exp:'CPR 35.4(1) — no party may call an expert or put in evidence an expert\'s report without the court\'s permission.'},
+]},
+{id:'cv21',title:'Topic 21: Civil Trial & Evidence',sub:'Trial procedure, hearsay & convictions as evidence',syllabus:'SA21',qs:[
+{q:'At trial in a multi-track case, what is the general order of proceedings?',opts:['[A] Defence opens; claimant calls evidence; defendant opens; defendant calls evidence; costs submissions','[B] Claimant opens; claimant calls evidence; defendant calls evidence; closing speeches; judgment; costs and permission to appeal','[C] Both parties open simultaneously; then jointly call evidence','[D] Defendant opens; claimant calls evidence; closing speeches; judgment'],ans:1,exp:'Standard civil trial order: claimant\'s opening; claimant\'s evidence; defence evidence; closing speeches (claimant then defendant); judgment; costs and permission to appeal.'},
+{q:'A party fails to attend trial. Under CPR 39.3, what powers does the court have?',opts:['[A] The court must adjourn','[B] The court may proceed in that party\'s absence, strike out their claim or defence, or make any other order it thinks just','[C] The court must automatically enter judgment against the absent party','[D] The court cannot proceed without all parties present'],ans:1,exp:'CPR 39.3 — if a party does not attend trial, the court may strike out their claim or defence, proceed to judgment, or make any other order it thinks just.'},
+{q:'A claimant seeks to rely on a written statement from a witness who has died. Under the Civil Evidence Act 1995, which is correct?',opts:['[A] Hearsay evidence is inadmissible — the statement must be excluded','[B] Hearsay is admissible; the court considers its weight having regard to all the circumstances','[C] Hearsay is only admissible if all parties consent','[D] Oral hearsay is always excluded'],ans:1,exp:'Section 1 Civil Evidence Act 1995 — hearsay evidence is admissible in civil proceedings. The court assesses the weight to be given to it.'},
+{q:'A defendant was convicted of fraud 2 years ago in criminal proceedings. In subsequent civil proceedings, is the conviction admissible?',opts:['[A] No — criminal convictions are inadmissible in civil proceedings','[B] Yes — under section 11 Civil Evidence Act 1968, it is admissible as evidence that the defendant committed the offence and is presumed conclusive unless they prove otherwise','[C] Yes — but only as evidence of bad character, not the underlying facts','[D] Yes — but only with the court\'s specific permission'],ans:1,exp:'Section 11 Civil Evidence Act 1968 — a conviction in criminal proceedings is admissible in civil proceedings as evidence that the person committed the offence. It is presumed they are guilty unless they can prove to the contrary.'},
+]},
+{id:'cv22',title:'Topic 22: Judgments & Enforcement',sub:'Tomlin orders, enforcement methods & settlements',syllabus:'SA22',qs:[
+{q:'Your client won at trial and obtained judgment for £80,000. The defendant has failed to pay. Which of the following is NOT a method of enforcing a money judgment?',opts:['[A] Third party debt order','[B] Charging order over the defendant\'s property','[C] Attachment of earnings','[D] A freezing injunction'],ans:3,exp:'A freezing injunction is a protective pre-judgment remedy, not an enforcement method. Enforcement methods include: writ/warrant of control, third party debt orders, charging orders, and attachment of earnings.'},
+{q:'Your client and the opposing party have settled. They want to record the settlement in a way that allows enforcement without fresh proceedings. What is the appropriate order?',opts:['[A] A consent order dismissing the claim','[B] A Tomlin order — staying the proceedings on agreed terms scheduled to the order, allowing enforcement by application in the existing proceedings','[C] A default judgment','[D] A Part 36 offer acceptance'],ans:1,exp:'A Tomlin order stays proceedings on agreed terms scheduled to the order. If the defendant fails to comply, the claimant can apply in the existing proceedings to enforce the terms.'},
+{q:'Your client has obtained a charging order over the defendant\'s house. What must your client do next to realise their security?',opts:['[A] Nothing — the charging order automatically transfers ownership','[B] Make a further application for an order for sale of the property','[C] Apply for a receiver to manage the property','[D] Issue fresh enforcement proceedings in the High Court'],ans:1,exp:'A charging order merely secures the debt against the property. To realise the security, the creditor must make a further application for an order for sale.'},
+{q:'To obtain information about a judgment debtor\'s assets, what procedure is available under CPR 71?',opts:['[A] A freezing injunction requiring asset disclosure','[B] An oral examination — the debtor is ordered to attend court to be examined on oath about their means and assets','[C] A Norwich Pharmacal order','[D] An application for specific disclosure'],ans:1,exp:'CPR 71 — a judgment creditor may apply for an order requiring the judgment debtor to attend court and be examined on oath about their means and assets.'},
+]},
+{id:'cv23',title:'Topic 23: Costs',sub:'Costs orders, basis of assessment & QOCS',syllabus:'SA23',qs:[
+{q:'At the end of a trial, the claimant wins on liability but recovers a modest sum. Under CPR 44.2(4), what factors can the court consider in departing from costs following the event?',opts:['[A] The court cannot depart from the general rule','[B] Conduct of all parties, whether a party succeeded only on part of their case, and any admissible offer to settle','[C] Only the financial circumstances of the losing party','[D] Only whether the winning party was legally represented'],ans:1,exp:'CPR 44.2(4) — the court may depart from costs following the event by taking into account conduct, partial success, and admissible offers to settle.'},
+{q:'The court orders costs on the indemnity basis. How does this differ from the standard basis?',opts:['[A] Indemnity costs are lower than standard costs','[B] On the indemnity basis, the proportionality test does not apply and any doubt is resolved in favour of the receiving party','[C] On the standard basis, costs are always awarded in full','[D] There is no practical difference'],ans:1,exp:'CPR 44.3 — on the indemnity basis, doubt is resolved in favour of the receiving party and the proportionality filter does not apply — significantly more generous than standard.'},
+{q:'At the end of a one-day interim hearing, the judge says she will carry out a summary assessment. What does this mean?',opts:['[A] The court refers costs to a costs judge for detailed assessment','[B] The court assesses the costs there and then at the end of the hearing','[C] The court makes an interim payment on account of costs','[D] The parties exchange costs schedules at the next CMC'],ans:1,exp:'Summary assessment — the court assesses the costs of that hearing immediately at its conclusion, based on costs schedules filed in advance. This is standard for hearings up to one day.'},
+{q:'Your client is a successful defendant in a personal injury claim. In what circumstances can you enforce a costs order against a QOCS-protected claimant without permission?',opts:['[A] Never — QOCS provides absolute protection','[B] Where the claimant has been found to be fundamentally dishonest, or where the claim was struck out as an abuse of process','[C] Only if the claimant has the means to pay','[D] Where the defendant made a Part 36 offer the claimant failed to beat'],ans:1,exp:'CPR 44.15-44.16 — QOCS protection can be lost without permission where the claim was struck out as an abuse or discloses no reasonable grounds, or where the claimant is found to be fundamentally dishonest.'},
+{q:'At a CMC, the judge makes a costs order that costs are "costs in the case". What does this mean?',opts:['[A] Each party pays their own costs of the CMC','[B] Whoever wins the case overall will recover the costs of this hearing as part of their overall costs','[C] The costs of the CMC are assessed immediately on the standard basis','[D] The loser at trial pays the winner\'s costs at indemnity rates'],ans:1,exp:'"Costs in the case" means the costs of that hearing will be paid by whoever loses the overall litigation.'},
+]},
+{id:'cv24',title:'Topic 24: Appeals',sub:'Routes of appeal, permission & grounds',syllabus:'SA24',qs:[
+{q:'A claimant is dissatisfied with a district judge\'s decision in the County Court. Where should they appeal?',opts:['[A] To the Court of Appeal','[B] To a circuit judge in the County Court','[C] To the High Court','[D] To the Supreme Court'],ans:1,exp:'CPR 52 and PD52A — an appeal from a district judge in the County Court goes to a circuit judge in the County Court.'},
+{q:'Your client wants to appeal a High Court judge\'s decision to the Court of Appeal. Do they need permission?',opts:['[A] Permission is never required to appeal a High Court judge','[B] Permission is required in almost all civil cases and is granted where the appeal has a real prospect of success or there is some other compelling reason','[C] Permission is only required for second appeals','[D] Permission is automatically granted where the losing party files within the time limit'],ans:1,exp:'CPR 52.3(1) — permission to appeal is required except in certain listed cases. CPR 52.3(6) — permission will only be given where the appeal has a real prospect of success or there is some other compelling reason.'},
+{q:'A party seeks to appeal on the ground that the judge made an error of law. Under CPR 52.21, when will the appeal court allow the appeal?',opts:['[A] Where the appeal court would have decided the case differently','[B] Where the decision was wrong, or was unjust because of a serious procedural irregularity','[C] Where the party can produce new evidence not available at first instance','[D] Where the judge failed to give adequate reasons'],ans:1,exp:'CPR 52.21 — the appeal court will allow an appeal where the decision was wrong, or where it was unjust because of a serious procedural or other irregularity. An error of law rendering the decision wrong is the classic ground.'},
+]},
+];
+const CRIMINAL=[
+{id:'cr1',title:'Workshops 1–3',sub:'Overview & Preliminaries to Prosecution',syllabus:'SA1–2',qs:[
+{q:'You are advising a client arrested and taken to a police station. They ask how long they can be held without charge. What is the correct advice?',opts:['[A] 12 hours maximum in all cases','[B] 24 hours initially, extendable to 36 hours by a superintendent and up to 96 hours by magistrates for indictable offences','[C] 48 hours without any need for extension','[D] 6 hours, after which they must be charged or released'],ans:1,exp:'PACE 1984 s.41 — initial detention is for 24 hours. A superintendent can extend to 36 hours. A magistrates\' court can authorise up to 96 hours total for indictable offences.'},
+{q:'The CPS applies the Full Code Test when deciding whether to charge. What are the two stages?',opts:['[A] The seriousness test and the public interest test','[B] The evidential stage and the public interest stage','[C] The sufficiency of evidence test and the gravity of the offence','[D] The likelihood of conviction and the cost of prosecution'],ans:1,exp:'The Full Code Test: (1) evidential stage — is there sufficient evidence for a realistic prospect of conviction? (2) public interest stage — is it in the public interest to prosecute? Both must be satisfied.'},
+{q:'Your client is being interviewed under caution. Code C.11 requires the interview to be conducted in which of the following ways?',opts:['[A] The police may continue interviewing as long as they wish','[B] The interview must be conducted at a police station, recorded, and the suspect must be cautioned; it must cease when the officer is satisfied all relevant questions have been asked','[C] The suspect must answer all questions or they can be held in contempt','[D] The interview can continue indefinitely if the suspect refuses to answer'],ans:1,exp:'Code C.11 — interviews must be conducted at a police station (unless exceptions apply), must be recorded, and the suspect must be cautioned. Interviews must cease when all questions have been put and answered.'},
+{q:'Aisha is charged with theft. What is the correct classification of this offence?',opts:['[A] Summary only','[B] Indictable only','[C] Either-way','[D] It depends on the value stolen'],ans:2,exp:'Theft is an either-way offence. Key classifications: theft (EW), robbery (EW), burglary (EW), rape (IO), common assault (SO), ABH (EW), GBH s.18 (IO), GBH s.20 (EW).'},
+{q:'Your client was arrested for common assault. The police seek to interview him without offering the opportunity to consult a solicitor. Which PACE right has been breached?',opts:['[A] The right to be cautioned','[B] The right of access to a solicitor under section 58 PACE 1984','[C] The right to remain silent','[D] The right to have the interview video recorded'],ans:1,exp:'Section 58 PACE 1984 — a person arrested and held in custody is entitled to consult a solicitor privately at any time. Denial of this right can lead to exclusion of interview evidence under s.78.'},
+]},
+{id:'cr2',title:'Workshops 4–7',sub:'First Hearings, Allocation & Bail',syllabus:'SA3–4',qs:[
+{q:'Marcus is charged with robbery (either-way). At his first hearing, the magistrates conduct plea before venue. Marcus indicates a not guilty plea. What happens at allocation?',opts:['[A] The magistrates must immediately send Marcus to the Crown Court','[B] The magistrates decide whether their sentencing powers are adequate. If they accept jurisdiction Marcus can still elect Crown Court trial. If they decline, the case goes to the Crown Court','[C] Marcus can automatically elect Crown Court trial','[D] The CPS alone decides where the case is tried'],ans:1,exp:'D6.9-6.18 BCP — after a not guilty indication at PBV, the magistrates determine allocation. If they accept jurisdiction, the defendant is given the choice to consent to magistrates\' trial or elect Crown Court trial.'},
+{q:'Lena is refused bail by the magistrates with a certificate of full argument. She wants to apply to the Crown Court. What is the correct procedure?',opts:['[A] Lena cannot apply to the Crown Court — she must make a fresh application in the magistrates\' court','[B] Following a refusal with a certificate of full argument, Lena can apply to the Crown Court for bail','[C] Lena must wait 14 days before applying to the Crown Court','[D] Lena must first appeal by way of case stated'],ans:1,exp:'D7.78-7.84 BCP — after a full bail application is refused in the magistrates\' court with a certificate of full argument, the defendant can apply to the Crown Court for bail.'},
+{q:'The prosecution opposes bail for a defendant charged with GBH on the ground he will commit further offences. Under Bail Act 1976 Schedule 1, what must be considered?',opts:['[A] Only whether the defendant has previous convictions','[B] The nature and seriousness of the offence, character, antecedents, associations and community ties, and the defendant\'s record of surrender to bail','[C] Only the view of the victim','[D] Only the defendant\'s criminal record'],ans:1,exp:'Bail Act 1976 Sch.1 Part I — when considering grounds for refusal, the court must have regard to nature and seriousness of the offence, character and antecedents, community ties, and record of surrender.'},
+{q:'A defendant is charged with murder. They apply for bail. Under what circumstances can bail be granted?',opts:['[A] Bail is available as of right','[B] Bail can only be granted if the court is satisfied there are exceptional circumstances which justify it','[C] Bail is never available for murder','[D] Bail is available only if the defendant has no previous convictions'],ans:1,exp:'D7.11 BCP — s.25 CJPOA 1994 (as amended): bail for a defendant charged with murder can only be granted if the court is satisfied that exceptional circumstances justify it.'},
+{q:'Indictable only offences are sent to the Crown Court under which statutory provision?',opts:['[A] Section 17 Criminal Justice Act 1967','[B] Section 51 Crime and Disorder Act 1998','[C] Section 9 Magistrates\' Courts Act 1980','[D] Section 24 Magistrates\' Courts Act 1980'],ans:1,exp:'Section 51 CDA 1998 — all indictable only offences must be sent forthwith to the Crown Court at the first hearing in the magistrates\' court.'},
+]},
+{id:'cr3',title:'Workshops 8–10',sub:'Evidence: Hearsay & Bad Character',syllabus:'SA14–15',qs:[
+{q:'The prosecution seeks to adduce a witness statement from a witness now abroad where it is not reasonably practicable to secure their attendance. Under which section of the CJA 2003?',opts:['[A] Section 114(1)(d) — interests of justice','[B] Section 116(2)(c) — witness outside the UK and not reasonably practicable to secure attendance','[C] Section 117 — business documents','[D] Section 118 — preserved common law exceptions'],ans:1,exp:'Section 116 CJA 2003 — hearsay admissible where the witness is outside the UK and it is not reasonably practicable to secure their attendance: s.116(2)(c).'},
+{q:'The prosecution seeks to adduce the defendant\'s previous conviction for a similar assault. Which gateway are they most likely to rely on?',opts:['[A] Gateway (a) — all parties agree','[B] Gateway (d) — relevant to an important matter in issue between defendant and prosecution, specifically propensity','[C] Gateway (g) — the defendant has attacked another person\'s character','[D] Gateway (b) — the defendant has adduced their own bad character'],ans:1,exp:'Section 101(1)(d) CJA 2003 — gateway (d) is the most commonly used. Previous convictions for similar offences are relevant to propensity to commit the kind of offence charged. See Hanson.'},
+{q:'During cross-examination of a prosecution witness, you suggest they fabricated their account. Under s.101(1)(g) CJA 2003, what consequences might follow?',opts:['[A] No consequences — cross-examination cannot open up bad character','[B] The defendant\'s bad character may become admissible through gateway (g) — attack on another person\'s character','[C] The prosecution must immediately apply to adduce bad character evidence','[D] Gateway (g) only applies if the defendant gives evidence personally'],ans:1,exp:'Section 101(1)(g) CJA 2003 — where the defendant has made an attack on another person\'s character, the defendant\'s own bad character becomes admissible through gateway (g).'},
+{q:'The court admits evidence of the defendant\'s previous conviction under gateway (d). What must the judge\'s bad character direction include?',opts:['[A] A direction that the jury must convict because of the previous conviction','[B] A direction explaining proper use of the evidence and warning the jury they must not convict on bad character alone','[C] A direction that the previous conviction is conclusive proof of guilt','[D] A direction that the previous conviction is irrelevant and must be ignored'],ans:1,exp:'F13.36-37 BCP — the judge must direct the jury on the limited use of bad character evidence. They may use it as evidence of propensity but must not convict on bad character alone.'},
+{q:'Your client is of previous good character and gives evidence at trial. What directions must the judge give the jury?',opts:['[A] No direction required — good character is irrelevant','[B] Both a credibility direction and a propensity direction — the Vye directions','[C] Only a credibility direction if the defendant gives evidence','[D] The judge has a discretion whether to give any good character direction'],ans:1,exp:'Vye [1993] — where a defendant is of good character, the judge must give both limbs: (1) credibility; (2) propensity. These are mandatory, not discretionary (subject to Hunter).'},
+]},
+{id:'cr4',title:'Workshops 11–13',sub:'Confessions, Silence & Identification',syllabus:'SA16–18',qs:[
+{q:'Your client made a confession after being denied access to a solicitor for 8 hours without good reason. You apply to exclude under s.76 PACE. On what ground(s)?',opts:['[A] Only s.76(2)(b) — circumstances rendering the confession unreliable','[B] Only s.76(2)(a) — oppression','[C] Only s.78 — unfair to admit given the breach of Code C','[D] Both s.76(2)(b) and s.78 — you should argue both'],ans:3,exp:'Denial of access to a solicitor for 8 hours without authorisation is a significant Code C breach. Arguments under s.76(2)(b) AND s.78 are both available and should both be advanced.'},
+{q:'Your client gave a no comment interview on your advice. At trial they rely on an alibi not mentioned at interview. The prosecution applies for a s.34 CJPOA 1994 direction. Can adverse inferences be drawn?',opts:['[A] No — following legal advice to stay silent always prevents s.34 inferences','[B] Yes — the jury may draw an adverse inference if it was reasonable to mention the alibi at interview and there was no good reason for failing to do so, even if legal advice was followed','[C] No — s.34 only applies where the defendant was not represented','[D] Yes — but only if the defendant refuses to give evidence at trial'],ans:1,exp:'Section 34 CJPOA 1994 — adverse inferences may be drawn where a fact relied on in the defence was not mentioned when questioned and it was reasonable to have mentioned it. Following legal advice to stay silent is relevant but not automatically a good reason (R v Beckles).'},
+{q:'The prosecution case relies substantially on visual identification evidence from one witness identified in a VIPER. You challenge reliability. What direction must the judge give?',opts:['[A] No special direction — identification evidence is treated like any other','[B] A Turnbull direction — warning the jury of the special need for caution and directing them to examine the circumstances of the identification carefully','[C] A Lucas direction about the defendant\'s lies','[D] A good character direction'],ans:1,exp:'Turnbull [1977] — where the case depends wholly or substantially on disputed visual identification, the judge must give a Turnbull direction warning of the special need for caution.'},
+{q:'The prosecution relies on a confession. You challenge admissibility by arguing oppression. Which tribunal determines admissibility?',opts:['[A] The jury — they decide all questions of fact','[B] The judge alone — at a voir dire conducted in the absence of the jury','[C] The magistrate and jury together','[D] The Registrar of Criminal Appeals'],ans:1,exp:'Admissibility of a confession is determined by the judge at a voir dire — a trial within a trial in the absence of the jury. The judge hears evidence and makes a ruling before the jury decides the case.'},
+{q:'Your client did not give evidence at trial. They had given a no comment interview. Under s.35 CJPOA 1994, what must the judge direct?',opts:['[A] That the jury must find the defendant guilty','[B] That the jury may draw such inferences as appear proper from the failure to testify, provided the prosecution case is sufficiently compelling and there is no good reason for not giving evidence','[C] That silence at trial is irrelevant','[D] That the defendant is presumed guilty'],ans:1,exp:'Section 35 CJPOA 1994 — adverse inferences may be drawn from failure to testify if there is a prima facie case and no good reason for not giving evidence. The inference cannot alone be sufficient to convict.'},
+]},
+{id:'cr5',title:'Workshops 14–17',sub:'Trial, Sentencing & Ancillary Orders',syllabus:'SA8–9,22–25',qs:[
+{q:'The defendant pleads guilty to s.18 GBH at the PTPH. The parties dispute the facts, significantly affecting sentence. What procedure follows?',opts:['[A] The judge accepts the defence version automatically','[B] A Newton hearing — the judge hears evidence and determines the factual basis for sentence','[C] The prosecution version is always used','[D] The matter is referred to the Court of Appeal'],ans:1,exp:'Newton (1982) — where there is a guilty plea but the parties dispute the factual basis for sentence, the judge conducts a Newton hearing. The judge hears evidence and determines the facts.'},
+{q:'A defendant pleads guilty to theft at the first available opportunity. What reduction applies under the Sentencing Council Guilty Plea Guideline?',opts:['[A] No reduction','[B] One third reduction','[C] One quarter reduction','[D] One tenth reduction'],ans:1,exp:'Sentencing Council Guilty Plea Guideline — a guilty plea at the first stage of proceedings attracts a one third reduction. This reduces to approximately one quarter at the PTPH and to one tenth at the door of the court.'},
+{q:'The defendant was sentenced to 3 years\' imprisonment yesterday. A psychiatric report has just come to light suggesting dangerousness. The judge wants to vary the sentence. Under what provision?',opts:['[A] The Crown Court has unlimited power to vary sentences at any time','[B] The Crown Court may vary a sentence within 56 days of the date on which it was imposed','[C] Only the Court of Appeal can vary a sentence once pronounced','[D] The sentence can be varied at any time on prosecution application'],ans:1,exp:'D20.100-101 BCP — the Crown Court has the power to vary or rescind a sentence within 56 days of the date on which it was imposed.'},
+{q:'A defendant is convicted in the magistrates\' court of an either-way offence for which their sentencing powers are insufficient. What should happen?',opts:['[A] The magistrates must sentence within their powers','[B] The magistrates may commit the defendant to the Crown Court for sentence','[C] The summary offence must be dealt with by the Crown Court too','[D] The magistrates must acquit on the either-way offence'],ans:1,exp:'D23.30-23.42 BCP — where the magistrates\' sentencing powers are insufficient following conviction for an either-way offence, they may commit to the Crown Court for sentence.'},
+{q:'The defendant is convicted of supply of a Class A drug. It is his second such conviction. Is there a minimum sentence under the Sentencing Act 2020?',opts:['[A] No — there is no minimum sentence for drug offences','[B] Yes — 7 years for a third Class A drug trafficking offence; s.313 does not apply on a second conviction','[C] Yes — s.313 SA 2020 imposes a minimum 7-year sentence on a third conviction; for a second conviction there is no mandatory minimum under s.313','[D] Yes — the minimum is 5 years for any Class A supply conviction'],ans:2,exp:'E18.2 BCP — section 313 SA 2020 imposes a minimum 7-year sentence for a third Class A drug trafficking offence. For a second conviction there is no mandatory minimum under s.313.'},
+{q:'The prosecution applies for a confiscation order following conviction. Under which legislation and in which court?',opts:['[A] Under the Proceeds of Crime Act 2002, in the Crown Court only','[B] Under the Criminal Justice Act 1988, in any court','[C] Under the Misuse of Drugs Act 1971, in the magistrates\' court','[D] Under the Sentencing Act 2020, in either court'],ans:0,exp:'E19.1 BCP — confiscation orders under section 6 of the Proceeds of Crime Act 2002 are made in the Crown Court.'},
+]},
+{id:'cr6',title:'Workshops 18–19',sub:'Appeals & Youth Courts',syllabus:'SA21,27–28',qs:[
+{q:'Jordan (aged 14) was convicted of theft in the youth court. He wants to appeal against conviction and sentence. Where does this appeal lie?',opts:['[A] To the Court of Appeal (Criminal Division)','[B] To the Crown Court — a complete rehearing; no leave required if notice given within 15 business days of sentence','[C] To the High Court by way of case stated only','[D] There is no right of appeal from the youth court'],ans:1,exp:'D29.1-29.7 BCP — appeals from the youth court go to the Crown Court by way of complete rehearing. No leave is required provided notice of appeal is given within 15 business days of sentence.'},
+{q:'Sofia (aged 16) is charged with s.18 GBH (maximum: life imprisonment for an adult). Which correctly describes the procedure?',opts:['[A] The youth court must automatically send Sofia to the Crown Court','[B] The youth court considers whether this is a grave crime. As the maximum for an adult is 14 years or more, it may be — the youth court has a discretion to send to the Crown Court','[C] Sofia has the right to elect Crown Court trial like an adult','[D] The case must be heard in the adult magistrates\' court'],ans:1,exp:'D24.19-24.30 BCP — s.18 GBH carries life imprisonment for an adult. This qualifies as a potential grave crime. The youth court considers whether to send Sofia to the Crown Court.'},
+{q:'Millie (aged 16) is convicted of s.20 GBH (maximum 5 years for an adult) in the youth court. The magistrates consider a Detention and Training Order. What conditions must be satisfied?',opts:['[A] Unfettered discretion to impose a DTO on any young person','[B] The custody threshold must be met — the offence must be so serious that neither a fine alone nor a community sentence can be justified — and Millie must be 12 or over','[C] Millie must be a persistent offender as well as meeting the custody threshold','[D] A DTO can only be imposed if the offence carries 14 years or more for an adult'],ans:1,exp:'E15.10-15.13 BCP — a DTO may be imposed on offenders aged 12-17. The custody threshold must be met. For 12-14 year olds the court must also find they are persistent offenders; at 16, Millie does not need to be a persistent offender.'},
+{q:'A defendant convicted at the Crown Court wants to appeal to the Court of Appeal against conviction. What is required?',opts:['[A] No requirement — there is an absolute right of appeal','[B] Leave to appeal — either from the trial judge (rarely) or from the Court of Appeal (Criminal Division)','[C] The prosecution must agree to the appeal','[D] A certificate from the trial judge that the case is fit for appeal'],ans:1,exp:'D26.7-26.9 BCP — a defendant appealing against conviction must obtain leave to appeal. Leave is granted by the trial judge or, far more commonly, by the Court of Appeal.'},
+{q:'Jenna was convicted of burglary on 4 February and sentenced on 18 February. She wants to appeal against conviction only. By when must she give notice of application for leave to appeal?',opts:['[A] Within 28 days of conviction (4 February)','[B] Within 28 days of sentence (18 February)','[C] Within 21 days of conviction','[D] Within 21 days of sentence'],ans:0,exp:'D27.3 BCP — notice of application for leave to appeal against conviction must be given within 28 days of the date of conviction (not sentence). Deadline is 4 March.'},
+{q:'The Attorney General considers a Crown Court sentence is unduly lenient. What procedure is available?',opts:['[A] The AG can require the Crown Court to re-sentence immediately','[B] The AG may refer the sentence to the Court of Appeal under s.36 CJA 1988 — the Court of Appeal may then increase the sentence','[C] The AG can only write to the judge expressing concern','[D] There is no mechanism for the prosecution to challenge a sentence once passed'],ans:1,exp:'D28.4 BCP — under s.36 CJA 1988, the Attorney General may refer a sentence which appears unduly lenient to the Court of Appeal, which may then impose a more severe sentence.'},
+]},
+];
+
+let S={};
+let currentTopic=null;
+function load(){try{const s=localStorage.getItem('btc_v4');if(s)S=JSON.parse(s);}catch(e){S={};}}
+function save(){try{localStorage.setItem('btc_v4',JSON.stringify(S));}catch(e){}}
+function ws(id){return S[id]||{done:false,scores:[],answers:{}};}
+function badgeCls(sc){if(!sc||!sc.length)return'none';const s=sc[sc.length-1];return s/10>=0.8?'g':s/10>=0.6?'a':'b';}
+function badgeTxt(sc){if(!sc||!sc.length)return'—';return sc[sc.length-1]+'/'+10;}
+
+function updateCountdowns(){
+  const now=new Date();
+  [[new Date(2026,3,16),'cd0'],[new Date(2026,3,21),'cd1'],[new Date(2026,3,23),'cd2']].forEach(([d,id])=>{
+    const el=document.getElementById(id);if(!el)return;
+    const days=Math.ceil((d-now)/(864e5));
+    el.textContent=days>0?days+'d':days===0?'Today!':'Done';
+    el.style.background=days<=7?'#7a1a1a':days<=14?'#7a4f1a':'#2d4a3e';
+  });
+}
+
+function buildNav(){
+  const cv=document.getElementById('nav-civil');
+  const cr=document.getElementById('nav-crim');
+  CIVIL.forEach(w=>{
+    const b=document.createElement('button');
+    b.className='nav-btn';b.id='nb-'+w.id;b.onclick=()=>showTopic(w.id);
+    b.innerHTML=`<span class="nav-dot" style="background:${ws(w.id).done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(ws(w.id).scores)}">${badgeTxt(ws(w.id).scores)}</span>`;
+    cv.appendChild(b);
+  });
+  CRIMINAL.forEach(w=>{
+    const b=document.createElement('button');
+    b.className='nav-btn';b.id='nb-'+w.id;b.onclick=()=>showTopic(w.id);
+    b.innerHTML=`<span class="nav-dot" style="background:${ws(w.id).done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(ws(w.id).scores)}">${badgeTxt(ws(w.id).scores)}</span>`;
+    cr.appendChild(b);
+  });
+}
+
+function refreshNav(){
+  [...CIVIL,...CRIMINAL].forEach(w=>{
+    const b=document.getElementById('nb-'+w.id);if(!b)return;
+    const s=ws(w.id);
+    b.innerHTML=`<span class="nav-dot" style="background:${s.done?'var(--accent)':'var(--border2)'}"></span><span style="flex:1;text-align:left">${w.title}</span><span class="nav-score ${badgeCls(s.scores)}">${badgeTxt(s.scores)}</span>`;
+  });
+}
+
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(name==='dash')refreshDash();
+  if(name==='weak')refreshWeak();
+}
+
+function showTopic(id){
+  currentTopic=id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-topic').classList.add('active');
+  const nb=document.getElementById('nb-'+id);if(nb)nb.classList.add('active');
+  const all=[...CIVIL,...CRIMINAL];
+  const w=all.find(x=>x.id===id);if(!w)return;
+  const s=ws(id);
+  document.getElementById('t-title').textContent=w.title;
+  document.getElementById('t-sub').textContent=w.sub+' ('+w.syllabus+')';
+  const db=document.getElementById('t-done-btn');
+  db.textContent=s.done?'✓ Completed':'Mark as complete';
+  db.className=s.done?'done-btn':'done-btn outline';
+  document.getElementById('t-score-lbl').textContent=s.scores&&s.scores.length?'Best score: '+Math.max(...s.scores)+'/'+w.qs.length:'Not yet attempted';
+  let html='';
+  w.qs.forEach((q,i)=>{
+    const key=id+'_'+i;
+    const done=s.answers&&s.answers[key]!==undefined;
+    const sel=done?s.answers[key]:-1;
+    html+=`<div class="q-wrap" id="qb-${key}">
+      <div class="q-num">Question ${i+1} of ${w.qs.length}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="opts">${q.opts.map((o,j)=>{
+        let cls='opt';
+        if(done){if(j===q.ans)cls+=' correct';else if(j===sel&&sel!==q.ans)cls+=' wrong';}
+        return`<div class="${cls}" id="o-${key}-${j}" onclick="${done?'':'pick(\''+id+'\','+i+','+j+')'}">${o}</div>`;
+      }).join('')}</div>
+      ${done?`<div class="exp show"><strong>Correct:</strong> ${q.opts[q.ans]}<br><br>${q.exp}</div>`:`<div class="exp" id="exp-${key}"></div>`}
+    </div>`;
+  });
+  document.getElementById('t-questions').innerHTML=html;
+  const answered=s.answers?Object.keys(s.answers).filter(k=>k.startsWith(id+'_')).length:0;
+  const sb=document.getElementById('t-score-box');
+  if(answered===w.qs.length){
+    const score=w.qs.filter((_,i)=>s.answers[id+'_'+i]===_.ans).length;
+    const pct=score/w.qs.length;
+    document.getElementById('t-score-main').textContent='Score: '+score+'/'+w.qs.length;
+    document.getElementById('t-score-sub').textContent=pct>=0.8?'Strong — well done.':pct>=0.6?'Solid — review the ones you missed.':'Weak spot — return to the BPP material for this topic.';
+    sb.className='score-box show';
+  }else{sb.className='score-box';}
+}
+
+function pick(wsId,idx,opt){
+  const all=[...CIVIL,...CRIMINAL];
+  const w=all.find(x=>x.id===wsId);const q=w.qs[idx];const key=wsId+'_'+idx;
+  const s=ws(wsId);if(!s.answers)s.answers={};if(s.answers[key]!==undefined)return;
+  s.answers[key]=opt;S[wsId]=s;
+  for(let i=0;i<q.opts.length;i++){
+    const el=document.getElementById('o-'+key+'-'+i);if(!el)continue;
+    el.className='opt';
+    if(i===q.ans)el.className+=' correct';
+    else if(i===opt&&opt!==q.ans)el.className+=' wrong';
+    el.onclick=null;
+  }
+  const exp=document.getElementById('exp-'+key);
+  if(exp){exp.innerHTML='<strong>Correct:</strong> '+q.opts[q.ans]+'<br><br>'+q.exp;exp.className='exp show';}
+  const answered=Object.keys(s.answers).filter(k=>k.startsWith(wsId+'_')).length;
+  if(answered===w.qs.length){
+    const score=w.qs.filter((_,i)=>s.answers[wsId+'_'+i]===_.ans).length;
+    if(!s.scores)s.scores=[];s.scores.push(score);S[wsId]=s;
+    const pct=score/w.qs.length;
+    document.getElementById('t-score-main').textContent='Score: '+score+'/'+w.qs.length;
+    document.getElementById('t-score-sub').textContent=pct>=0.8?'Strong — well done.':pct>=0.6?'Solid — review the ones you missed.':'Weak spot — return to the BPP material for this topic.';
+    document.getElementById('t-score-box').className='score-box show';
+    document.getElementById('t-score-lbl').textContent='Best score: '+Math.max(...s.scores)+'/'+w.qs.length;
+    refreshNav();refreshDash();
+  }
+  save();
+}
+
+function toggleDone(id){
+  if(!id)return;const s=ws(id);s.done=!s.done;S[id]=s;save();
+  const db=document.getElementById('t-done-btn');
+  if(db){db.textContent=s.done?'✓ Completed':'Mark as complete';db.className=s.done?'done-btn':'done-btn outline';}
+  refreshNav();refreshDash();
+}
+
+function refreshDash(){
+  const all=[...CIVIL,...CRIMINAL];
+  const done=all.filter(w=>ws(w.id).done).length;
+  const att=all.filter(w=>(ws(w.id).scores||[]).length>0);
+  const avg=att.length>0?Math.round(att.reduce((a,w)=>a+(ws(w.id).scores.slice(-1)[0]||0),0)/att.length*10)/10:null;
+  const wk=all.filter(w=>{const s=ws(w.id).scores;return s&&s.length>0&&s[s.length-1]<7;});
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-lbl">Topics done</div><div class="stat-val">${done}/${all.length}</div></div>
+    <div class="stat-card"><div class="stat-lbl">MCQs done</div><div class="stat-val">${att.length}/${all.length}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Avg score</div><div class="stat-val ${avg===null?'':avg>=8?'g':avg>=6?'a':'r'}">${avg===null?'—':avg+'/10'}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Weak spots</div><div class="stat-val ${wk.length>0?'r':''}">${wk.length}</div></div>`;
+  const cvd=CIVIL.filter(w=>ws(w.id).done).length;
+  const crd=CRIMINAL.filter(w=>ws(w.id).done).length;
+  document.getElementById('cv-prog').style.width=Math.round(cvd/CIVIL.length*100)+'%';
+  document.getElementById('cv-lbl').textContent=cvd+'/'+CIVIL.length+' topics completed ('+Math.round(cvd/CIVIL.length*100)+'%)';
+  document.getElementById('cr-prog').style.width=Math.round(crd/CRIMINAL.length*100)+'%';
+  document.getElementById('cr-lbl').textContent=crd+'/'+CRIMINAL.length+' topics completed ('+Math.round(crd/CRIMINAL.length*100)+'%)';
+  const dw=document.getElementById('dash-weak');
+  if(wk.length===0){dw.innerHTML='<p class="empty">No weak spots yet. Complete some MCQs to see results here.</p>';}
+  else{dw.innerHTML=wk.slice(0,5).map(w=>{const s=ws(w.id).scores;const l=s[s.length-1];return`<div class="weak-card"><div><div class="weak-title">${w.title}</div><div class="weak-sub">${w.sub}</div></div><div class="weak-score">${l}/${w.qs.length}</div></div>`;}).join('');}
+}
+
+function refreshWeak(){
+  const all=[...CIVIL,...CRIMINAL];
+  const wk=all.filter(w=>{const s=ws(w.id).scores;return s&&s.length>0&&s[s.length-1]<7;});
+  const el=document.getElementById('weak-list');
+  if(wk.length===0){el.innerHTML='<p class="empty">No weak spots yet — complete some MCQs to see your results here.</p>';return;}
+  el.innerHTML=wk.map(w=>{const s=ws(w.id).scores;const l=s[s.length-1];return`<div class="weak-card"><div><div class="weak-title">${w.title} — ${w.sub}</div><div class="weak-sub">${w.syllabus}</div></div><div class="weak-score">${l}/${w.qs.length}</div></div>`;}).join('');
+}
+
+load();buildNav();refreshDash();updateCountdowns();setInterval(updateCountdowns,60000);
+</script>
+</body>
+</html>
