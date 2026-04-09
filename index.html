@@ -48,6 +48,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .page-hdr p{font-size:13px;color:var(--text2);margin-top:4px}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:12px 14px}
+.dash-toggle{padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.dash-toggle.active{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:500}
 .stat-lbl{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
 .stat-val{font-size:22px;font-weight:600;letter-spacing:-.02em}
 .stat-val.g{color:var(--success)}.stat-val.a{color:var(--warn)}.stat-val.r{color:var(--danger)}
@@ -106,13 +108,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ref-panel-sub{font-size:11px;color:var(--text3);margin-top:2px}
 .ref-panel-body{padding:12px;display:flex;flex-direction:column;gap:8px;max-height:380px;overflow-y:auto}
 .ref-card{background:var(--surface2);border-radius:var(--r);padding:10px 12px}
-.ref-card-tag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500;margin-bottom:5px;font-family:'DM Mono',monospace}
+.ref-card-tag{display:inline-block;font-size:11px;padding:1px 5px;border-radius:3px;font-weight:500;margin-bottom:5px;font-family:'DM Mono',monospace}
 .ref-card-tag.rule{background:var(--accent-light);color:var(--accent-text)}
 .ref-card-tag.stat{background:var(--warn-light);color:var(--warn)}
 .ref-card-tag.case{background:var(--danger-light);color:var(--danger)}
 .ref-card-tag.note{background:var(--surface);color:var(--text3);border:1px solid var(--border)}
-.ref-card-title{font-size:11px;font-weight:500;color:var(--text);margin-bottom:4px}
-.ref-card-text{font-size:11px;color:var(--text2);line-height:1.6}
+.ref-card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px}
+.ref-card-text{font-size:13px;color:var(--text2);line-height:1.6}
 .ref-card-text strong{color:var(--text);font-weight:500}
 .ref-empty{padding:24px 12px;text-align:center;color:var(--text3);font-size:12px;line-height:1.6}
 .ref-progress{padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2)}
@@ -178,6 +180,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div class="main">
   <div id="page-dash" class="page active">
     <div class="page-hdr"><h1>Revision Dashboard</h1><p>Your progress across both papers. Click any topic in the sidebar to drill MCQs.</p></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:.75rem">
+      <button class="dash-toggle active" id="dt-all" onclick="setDashView('all')">All</button>
+      <button class="dash-toggle" id="dt-civil" onclick="setDashView('civil')">Civil</button>
+      <button class="dash-toggle" id="dt-crim" onclick="setDashView('crim')">Criminal</button>
+    </div>
     <div class="stats-row" id="dash-stats"></div>
     <div class="dash-grid">
       <div><div class="section-lbl">Civil Litigation</div><div class="prog-wrap"><div class="prog-bar" id="cv-prog"></div></div><div class="prog-lbl" id="cv-lbl"></div></div>
@@ -187,7 +194,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div id="dash-weak"></div>
   </div>
   <div id="page-weak" class="page">
-    <div class="page-hdr"><h1>Weak Spots</h1><p>Topics scoring below 7. Return to the BPP material for these before re-drilling.</p></div>
+    <div class="page-hdr"><h1>Weak Spots</h1><p>Every question you got wrong, grouped by topic. Click any question to see the explanation. Return to BPP material for the topics with the most wrong answers.</p></div>
     <div id="weak-list"></div>
   </div>
   <div id="page-guide" class="page">
@@ -273,6 +280,132 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 </div>
 <script>
+const WRONGS_DATA={
+  'cv1_0':[null,'The court must actively manage cases and may encourage ADR — but this is not a mandatory order in all cases.','CPR 1.4 is a duty on the court, not triggered only by a party\'s request.','Churchill confirmed courts CAN compel ADR in appropriate cases.'],
+  'cv1_1':['The automatic strike out option does not exist for failing to engage in ADR pre-action.','CPR 1.3 imposes the duty on both parties — not just the claimant.',null,'ADR is relevant at all stages including pre-action — Halsey applies from the outset.'],
+  'cv1_2':['CPR 1.3 expressly imposes the duty on the parties too, not just the court.','The claimant has no special duty beyond what applies to all parties.',null,'Legal representatives share the duty but parties themselves also bear it under CPR 1.3.'],
+  'cv1_3':['The court does not accept this — parties being far apart is actually a reason why mediation might help.',null,'This is the weakest justification — mere subjective reluctance is not an objective reason.','This is a strong justification — Halsey recognises prior failed ADR as a relevant factor.'],
+  'cv2_0':[null,'The period expires ON 1 March 2025 — not "not yet expired".','The period for personal injury is 3 years, not 6 years — 6 years applies to contract and general tort.','1 March 2024 would be 2 years after the accident — the period is 3 years.'],
+  'cv2_1':['6 years from the advice is the primary period but ss.14A-14B provide the extended regime for latent damage.','3 years from personal injury applies to s.11 PI claims — this is a pure financial loss negligence claim.',null,'2 years is not a limitation period recognised in English law for this type of claim.'],
+  'cv2_2':['Time does not run from the accident for a minor — s.28 postpones it until the disability ends.','The parent\'s knowledge is irrelevant to the minor\'s limitation period under s.28.',null,'There is no rule preventing children from suing — they sue through a litigation friend.'],
+  'cv3_0':['7 days is too short — the PI Protocol requires 21 days for acknowledgment.','14 days is not the correct period for acknowledgment — that is 21 days.',null,'3 months is the period for the full response after acknowledgment — not the acknowledgment itself.'],
+  'cv3_1':['This is wrong — protocol breaches absolutely can and do affect costs orders even after judgment.',null,'Striking out is a much more drastic remedy reserved for serious breaches — costs is the primary sanction.','The court itself decides on costs — no referral to a costs judge is required for this determination.'],
+  'cv3_2':['The claimant cannot simply issue because a response has been received — stocktake is required first.',null,'There is no automatic 3-month waiting period after the response — but stocktake must be done first.','No court order is needed to proceed — the claimant just needs to complete the stocktake process first.'],
+  'cv3_3':['The defendant\'s consent is not required — but notification and invitation to jointly instruct is required.',null,'Expert evidence CAN be obtained pre-action — the protocol encourages it with proper notification.','Agreement is sought but not mandatory — the defendant cannot veto pre-action expert instruction.'],
+  'cv4_0':['Arbitration clauses are binding contracts — they are generally enforceable as a matter of law.','The value of the claim is irrelevant to whether an arbitration clause is enforced.',null,'The burden is reversed — the CLAIMANT must show the clause is null, void etc. to avoid a stay.'],
+  'cv4_1':['An error of law is generally NOT a ground for challenge — the whole point of expert determination is finality.',null,'There is no statutory appeal route for expert determination unlike arbitration under the AA 1996.','Challenge IS possible in limited circumstances — fraud or material departure from instructions.'],
+  'cv4_2':['Complex legal questions are better suited to litigation or arbitration where legal argument can be heard.',null,'Multi-party disputes are difficult for expert determination which works best as a bilateral process.','Personal injury claims involve legal and factual issues — not the technical valuation issues expert determination suits.'],
+  'cv5_0':['Mediation is confidential and without prejudice — statements cannot be used in subsequent litigation.',null,'Written offers are not the only protection — ALL communications in mediation are protected.','The without prejudice rule applies automatically to genuine settlement negotiations — no written agreement needed.'],
+  'cv5_1':['ENE is NOT binding — that would make it arbitration or adjudication, not evaluation.',null,'ENE is available at any level of court — CPR 3.1(2)(m) gives the court this power.','A Newton hearing is a criminal procedure for disputed facts after a guilty plea — completely different.'],
+  'cv5_2':['The mediator does NOT disclose information from one side to the other without consent — confidentiality is core.',null,'There IS a duty of confidentiality in caucus — this is a fundamental ethical obligation of the mediator.','The mediator has no obligation to report to the court — mediation is confidential from the court too.'],
+  'cv6_0':['Deemed service is on the second business day after posting — not the day of posting itself.',null,'The fourth business day after posting is not the correct deemed service rule under CPR 6.14.','Seven days is not the deemed service rule — that figure does not appear in CPR 6.14.'],
+  'cv6_1':['Last known ADDRESS is too broad — the rule specifically refers to usual or last known RESIDENCE for individuals.',null,'Visiting an address is not sufficient — it must be the usual or last known place of RESIDENCE.','Service cannot be effected without consent is wrong — the court has mechanisms to serve on defendants who evade.'],
+  'cv6_2':['1 June is only 2 months — the validity period is 4 months.','1 July is only 3 months — the validity period is 4 months.',null,'1 October would be 6 months — that only applies where service is out of the jurisdiction.'],
+  'cv6_3':['Doing nothing means the claim form expires and the claim must be re-issued — this is not advisable.',null,'A fresh claim form may cause limitation problems — extending the existing one is the correct approach.','Summary judgment requires a defendant to have been served — you cannot apply before service is effected.'],
+  'cv6_4':['High Court only applies to PI claims over £50,000 — £18,000 is well below that threshold.',null,'Magistrates\' court handles criminal cases and some limited civil matters — not standard PI claims.','The claimant does NOT have unfettered choice — jurisdiction rules constrain where claims must be issued.'],
+  'cv7_0':['Naming each partner individually is impractical and unnecessary — the firm name suffices under CPR 7.2A.',null,'Only the managing partner is not correct — the claim is against the partnership as a whole in its name.','Partnerships CAN be sued — CPR 7.2A specifically provides for this.'],
+  'cv7_1':['A child cannot bring proceedings in their own name — a litigation friend is always required under CPR 21.',null,'The Official Solicitor only acts where no other suitable person is available — the mother can act here.','The child can sue NOW through a litigation friend — they do not have to wait until age 18.'],
+  'cv8_0':['A witness list is not required in particulars of claim — that comes later in the litigation process.',null,'Counsel\'s advice is not required in particulars of claim — it is a privileged document.','Financial position of the claimant is not a requirement of particulars of claim under CPR 16.4.'],
+  'cv8_1':['There IS an effect — CPR 16.5(5) deems unaddressed allegations to be admitted.',null,'Automatic strike out does not follow from failure to address an allegation — it is deemed admitted.','Default judgment does not automatically follow — the claimant would need to make an application for it.'],
+  'cv8_2':['28 days is the time limit — 32 days exceeds it so the defence is NOT in time.','14 days only applies where no acknowledgment of service is filed.',null,'Defences cannot be filed at any time — the time limits in CPR 15.4 are strict.'],
+  'cv8_3':['A reply is never mandatory — CPR 15.8 makes this clear.',null,'Failure to file a reply does NOT mean admitting the defence — this is the opposite of the rule.','There is no loss of right to challenge the defence by not filing a reply — the denial stands automatically.'],
+  'cv9_0':['Permission IS required if the counterclaim is filed AFTER the defence — but not if filed simultaneously.',null,'A counterclaim cannot always be issued without permission — timing matters.','A counterclaim is made in the SAME proceedings — not as a separate claim.'],
+  'cv9_1':['The claimant\'s consent is not required to bring a third party into proceedings under CPR 20.',null,'A fresh claim form in separate proceedings is unnecessary and wasteful — CPR 20 provides the mechanism.','Third parties do not become parties automatically — they must be formally served with an additional claim form.'],
+  'cv9_2':['Separate proceedings are unnecessary — CPR 20.6 provides the mechanism within the existing claim.',null,'The claimant\'s consent is not required for a contribution or indemnity claim against a co-party.','The court does not automatically join the co-defendant — the defendant must file the notice themselves.'],
+  'cv9_3':['The third party does not automatically become a defendant in the MAIN proceedings — they become a party to the additional claim.',null,'A specific joining order is not required — service of the additional claim form is what makes them a party.','The third party DOES have obligations — they must acknowledge service or file a defence.'],
+  'cv10_0':['Permission is NOT always required — a party can amend without permission before service.',null,'There is no 7-day rule — the right to amend without permission continues until service.','A fresh claim form is not required — CPR 17.1 specifically allows amendment of the existing claim form.'],
+  'cv10_1':['The amendment IS possible — CPR 17.4 provides a mechanism, but only if the same facts test is met.',null,'The other party\'s consent is an alternative route but not the only one — the court can permit without consent.','The trial judge has no special power here — any judge hearing an application can allow the amendment.'],
+  'cv11_0':['Summary judgment is a much more drastic step — the proper first response to vagueness is a Part 18 request.',null,'Filing an amended reply addresses what YOU think the defence means — not what it actually means.','Reporting to the judge without giving the defendant a chance to respond first would be procedurally improper.'],
+  'cv11_1':['There IS a consequence — contempt proceedings under CPR 32.14.',null,'The response is not automatically disregarded — it stands but the maker faces contempt proceedings.','The other party cannot simply apply to strike out — contempt proceedings are the specific remedy.'],
+  'cv12_0':['An application with a witness statement is required for UNSPECIFIED claims — for specified sums a request suffices.',null,'Applying to the judge at a hearing is required for unspecified amounts only — not specified sums.','A letter to the court is not sufficient — the formal request form (N225) must be filed.'],
+  'cv12_1':['Real prospect of success alone is the discretionary ground — mandatory set aside requires the judgment to be wrongly entered.',null,'Being wrongly entered is the mandatory ground — this triggers automatic set aside under CPR 13.2.','Failure to mitigate is not a ground for setting aside default judgment.'],
+  'cv12_2':['The balance of probabilities test applies to trials — summary judgment uses the "real prospect" test.',null,'Definitively having a defence is too high a bar — the test is whether there is a REAL (not fanciful) prospect.','Track allocation is a separate case management decision — not relevant to the summary judgment test.'],
+  'cv12_3':['Summary judgment is not final on its own — the court retains discretion and must consider compelling reasons.',null,'Granting summary judgment ignores the compelling reason question — the court must consider it.','A stay is a possible order but not the only or most appropriate response to this argument.'],
+  'cv13_0':['Small claims is for claims up to £10,000 — £22,000 exceeds that threshold.',null,'Intermediate track covers £25,000-£100,000 — £22,000 is within the fast track bracket.','Multi-track is for cases over £25,000 or complex cases — £22,000 straightforward claim does not qualify.'],
+  'cv13_1':['Automatic strike out does not follow from failing to file a costs budget — the court fees only sanction applies.',null,'There is no 25% costs penalty in CPR 3.14 — the sanction is limitation to court fees only.','The CCMC is not automatically adjourned — the sanction takes immediate effect unless the court orders otherwise.'],
+  'cv13_2':['Prejudice/reason/proportionality is not the Denton test — Denton has three specific stages.',null,'Whether the breach was intentional is not one of the three Denton stages — it may be a factor within stage 2.','The overriding objective is relevant context but the three Denton stages are the specific test to apply.'],
+  'cv13_3':['Failure to comply with a court order is only ONE of the three grounds — not the only one.',null,'No merit on the facts is not one of the grounds under CPR 3.4(2) — that would be summary judgment territory.','The opposing party\'s consent is irrelevant to striking out — the court acts on its own discretion.'],
+  'cv13_4':['Automatic refusal is wrong — Denton requires the court to go through all three stages, and minor breaches may still attract relief.',null,'Automatic grant is also wrong — even minor breaches still require the court to go through the Denton stages.','Referral to the Court of Appeal is not a response to a late defence — the court deals with it itself.'],
+  'cv13_5':['There ARE automatic costs consequences under CPR 38.6 — the defendant gets their costs unless the court orders otherwise.',null,'Indemnity costs are not automatic on discontinuance — standard costs follow unless there is something more.','Discontinuance IS permitted after a defence is filed — CPR 38 allows it, subject to costs consequences.'],
+  'cv14_0':['All documents relating to the case is too broad — standard disclosure is limited to the four categories in CPR 31.6.',null,'Documents intended to be relied on at trial is only one of the four categories — the others must also be disclosed.','Court-requested documents describes specific disclosure under CPR 31.12 — not standard disclosure.'],
+  'cv14_1':['There IS an obligation to disclose documents adversely affecting your own case — CPR 31.6(b) is explicit.',null,'Relevance is already established — a document within standard disclosure cannot be withheld on relevance grounds.','Waiting for a specific disclosure application does not relieve the obligation — the duty of disclosure is automatic.'],
+  'cv14_2':['Permanent waiver is wrong — CPR 31.20 specifically provides a mechanism to protect inadvertently disclosed documents.',null,'Mandatory immediate return is not the rule — the court must make an order restraining use.','Inadvertent disclosure does have legal consequences — CPR 31.20 specifically addresses this situation.'],
+  'cv14_3':[null,'Inviting the defendant to redo standard disclosure has no formal status — a court order under CPR 31.12 is needed.','Striking out is disproportionate at this stage — specific disclosure is the correct first remedy.','Writing to the court informally has no procedural effect — a formal application under CPR 31.12 is required.'],
+  'cv14_4':['Simple possession plus request is not sufficient — both limbs of the CPR 31.17 test must be satisfied.',null,'All parties consenting is not required for third party disclosure — the court has power to order it unilaterally.','The third party does not need to have been joined as a party to the main action for CPR 31.17 to apply.'],
+  'cv14_5':['All communications with a solicitor is too broad — privilege only covers communications for legal advice purposes.',null,'Communications before issue are protected too — legal advice privilege applies from the start of the retainer.','The client\'s specific objection is not required — privilege belongs to the client but the solicitor asserts it.'],
+  'cv14_6':['The without prejudice label is not conclusive but if the communication was a genuine attempt to settle, it IS protected.',null,'One party\'s consent does not waive the protection — both parties must agree to waive the without prejudice rule.','Without prejudice communications CANNOT generally be shown to the judge on costs — Calderbank letters are a specific exception where the letter is expressly marked "without prejudice save as to costs".'],
+  'cv15_0':['There IS a special duty on without notice applications — full and frank disclosure is required.',null,'Disclosing only supporting documents would be a serious breach of the full and frank duty.','Informing the defendant after is a requirement of the order itself — but the duty of disclosure is to the COURT at the time of the application.'],
+  'cv15_1':['2 clear days is not sufficient — CPR 23.7 requires at least 3 clear days.',null,'7 clear days is not the standard notice period for interim applications — that is 3 clear days.','14 clear days is too long — that applies to other procedural steps, not interim application notice.'],
+  'cv15_2':['It is sometimes permitted — CPR 25.3 sets out the circumstances where without notice applications can be made.',null,'Previous non-compliance by the respondent is not one of the listed grounds for a without notice application.','The consent of ALL parties would make it a with-notice application — without notice means without the respondent\'s knowledge.'],
+  'cv16_0':['The defendant\'s consent is not required — the court can order an interim payment over the defendant\'s objection.',null,'Allocation to a track is not a prerequisite for an interim payment application.','The £100,000 threshold does not exist for interim payments — the test is whether a substantial sum would be awarded at trial.'],
+  'cv16_1':['Ordinary residence out of the jurisdiction is condition (b)(i) — not the insolvency condition.',null,'Steps to hinder enforcement is condition (b)(vi) — not the insolvency condition.','Insolvency IS a recognised ground — it is specifically condition (b)(ii) of CPR 25.27.'],
+  'cv17_0':['Definitively winning at trial is not the test — American Cyanamid deliberately set a LOW threshold at stage 1.',null,'The defendant\'s means is relevant to adequacy of damages at stage 2 — not to the first question.','ADR is not a prerequisite for an interim injunction application.'],
+  'cv17_1':['Automatic grant is wrong — insolvency goes to adequacy of damages, which then leads to stage 3 balance of convenience.',null,'Refusing the injunction because of insolvency is wrong — insolvency actually SUPPORTS granting it (damages inadequate).','Security is a possible condition on an injunction but not the automatic response to insolvency.'],
+  'cv17_2':['The undertaking is to compensate the DEFENDANT — not to pay the defendant\'s legal costs specifically.',null,'Paying into court is not what an undertaking in damages means — it is a personal promise, not a payment.','The claimant does not waive costs rights by giving an undertaking in damages.'],
+  'cv18_0':['The claimant getting all their costs is wrong — they failed to beat the defendant\'s offer so they lose costs from expiry of the relevant period.',null,'The defendant paying all costs is wrong — it is the CLAIMANT who faces adverse costs consequences for not beating the offer.','There ARE costs consequences — this is the central purpose of the Part 36 regime.'],
+  'cv18_1':['No additional consequences is wrong — CPR 36.17(4) provides a suite of additional benefits for a claimant who beats their own offer.',null,'Double damages is not a remedy available under CPR 36.17(4) or at all.','25% above base rate is not a figure in CPR 36 — the cap is 10% above base rate.'],
+  'cv18_2':['The offer does NOT expire after the relevant period — this is a common misconception. It remains open until withdrawn.',null,'The defendant\'s consent is not required to accept a Part 36 offer after the relevant period — it can be accepted unilaterally.','A court order is not needed to accept a late Part 36 offer — acceptance is by written notice.'],
+  'cv18_3':['Being expressed inclusive of interest is NOT a formal requirement under CPR 36.5 — this is a common distractor.',null,'A draft consent order is not required — acceptance follows a formal written notice.','Counsel approval is not required — the party or their solicitor can make the offer.'],
+  'cv18_4':['A Calderbank offer is NOT binding on acceptance in a different way to Part 36 — both create binding settlements on acceptance.',null,'A Calderbank offer CAN be made before proceedings are issued — there is no such restriction.','There IS a difference — the key distinction is the automatic costs consequences which Part 36 carries and Calderbank does not.'],
+  'cv18_5':['Withdrawal at any time is wrong — during the relevant period, withdrawal requires the court\'s permission.',null,'The claimant\'s written rejection is not required for the offeror to be able to withdraw after the relevant period.','Withdrawal after the relevant period is effective from communication — but during it, permission is needed.'],
+  'cv19_0':['Not attending at all would mean the witness statement is not confirmed on oath — the witness must attend.',null,'Reading the statement aloud in full is not modern civil trial procedure — the judge reads it in advance.','Re-reading under oath is not required — the witness simply confirms the statement is true and is then cross-examined.'],
+  'cv19_1':['There IS a mechanism to compel attendance — the witness summons under CPR 34.','None','A bench warrant is a criminal procedure — civil courts use witness summonses.','Adverse inferences from absence apply in criminal cases under CJPOA 1994 — not in civil proceedings.'],
+  'cv19_2':['False witness statements are not merely a credibility matter — contempt proceedings are available.',null,'Automatic exclusion does not follow — the evidence stands but contempt proceedings can be brought.','Losing the right to call witnesses is not the consequence — contempt proceedings are the remedy under CPR 32.14.'],
+  'cv19_3':['You CAN challenge the credibility of a witness who does not attend — CPR 33.4 provides the mechanism.',null,'Hearsay IS admissible in civil proceedings under the Civil Evidence Act 1995 — this is a key principle.','Striking out the statement is disproportionate — the remedy is an application to cross-examine under CPR 33.4.'],
+  'cv20_0':['Allowing each party their own expert without question is wrong — CPR 35.7 gives the court power to direct a single joint expert.',null,'Expert evidence is not refused on the fast track — it is just strongly channelled through a single joint expert.','Allowing separate experts with limited oral time is possible but not the primary approach — single joint expert is preferred.'],
+  'cv20_1':['At any time for any purpose is wrong — the questions must be within 28 days and for clarification only.',null,'Questions must go through the instructing party\'s solicitor first — not directly through the judge.','14 days from appointment is not the rule — it is 28 days from service of the expert\'s REPORT.'],
+  'cv20_2':['Supporting the instructing party is what a hired gun does — CPR 35.3 expressly overrides this obligation.',null,'Reaching a compromise opinion is not the expert\'s role — they give their honest independent view.','Agreeing with joint statements applies to expert discussions — but the overriding duty is to the COURT not to agree for its own sake.'],
+  'cv20_3':['Agreeing a settlement is not the purpose of expert discussions — that is for mediation or negotiation.',null,'Producing a single joint report is not the outcome — the outcome is a statement of agreed and disagreed matters.','Deciding who has the better opinion is for the court — not for the experts themselves to determine.'],
+  'cv20_4':['Expert evidence cannot be used freely — CPR 35.4(1) requires the court\'s permission as a strict precondition.',null,'Attending trial in person is not required merely because the report was prepared without permission.','Using it as hearsay evidence is wrong — expert reports are not admitted as hearsay, they are expert opinion evidence.'],
+  'cv21_0':['Defence opening and then claimant calling evidence reverses the actual order.',null,'Both parties opening simultaneously does not reflect English civil trial procedure.','Defendant opening first is wrong — the claimant bears the burden so opens first.'],
+  'cv21_1':['Mandatory adjournment is wrong — CPR 39.3 gives the court a range of options including proceeding in absence.',null,'Automatic judgment against the absent party is wrong — the court has discretion, not a mandatory rule.','The court CAN proceed without all parties — CPR 39.3 expressly provides for this.'],
+  'cv21_2':['Hearsay IS admissible in civil proceedings — the Civil Evidence Act 1995 s.1 abolished the exclusionary rule.',null,'All parties consenting is not required — hearsay is admissible as of right under the CEA 1995.','Oral hearsay is also admissible — the CEA 1995 does not distinguish between oral and written hearsay.'],
+  'cv21_3':['Criminal convictions ARE admissible in civil proceedings — s.11 CEA 1968 specifically provides for this.',null,'The conviction is evidence of the underlying facts, not merely of bad character — s.11 goes further.','Specific permission is not required — s.11 CEA 1968 creates automatic admissibility once the conviction is proved.'],
+  'cv22_0':['Third party debt orders ARE a method of enforcing a money judgment — not the answer we\'re looking for.',null,'Charging orders ARE a method of enforcing a money judgment — not the answer.','Attachment of earnings IS a method of enforcing a money judgment — not the answer.'],
+  'cv22_1':['A consent order dismissing the claim ends the proceedings entirely — there is nothing left to enforce within.',null,'A default judgment presupposes contested proceedings — not appropriate for a negotiated settlement.','A Part 36 acceptance deals with costs and payment — it does not create the enforcement mechanism of a Tomlin order.'],
+  'cv22_2':['The charging order does NOT transfer ownership — it only secures the debt against the property.',null,'A receiver is an option in some cases but not the standard next step after a charging order.','Fresh proceedings in the High Court are not required — the application for sale is made in the same proceedings.'],
+  'cv22_3':['A freezing injunction prevents dissipation but does not examine the debtor about their assets.',null,'A Norwich Pharmacal order discloses the identity of a wrongdoer — not information about a judgment debtor\'s assets.','Specific disclosure is a disclosure mechanism in ongoing proceedings — not an enforcement information tool.'],
+  'cv23_0':['The court CAN depart from costs following the event — CPR 44.2(4) expressly provides for this.',null,'Only the financial circumstances of the losing party is too narrow — conduct and partial success are also relevant.','Whether the winning party was represented is not a listed factor in CPR 44.2(4).'],
+  'cv23_1':['Indemnity costs are MORE generous than standard — not lower.',null,'Standard basis does not award costs in full — it applies the proportionality filter and resolves doubt against the receiving party.','There IS a practical difference — the proportionality filter and the resolution of doubt are the key distinctions.'],
+  'cv23_2':['Referring to a costs judge is detailed assessment — summary assessment is done immediately by the trial judge.',null,'An interim payment on account of costs is a separate order — not the same as summary assessment.','Exchanging costs schedules at the CMC is a case management step — not what summary assessment means.'],
+  'cv23_3':['QOCS does NOT provide absolute protection — it can be lost in defined circumstances.',null,'The claimant\'s means are irrelevant to whether QOCS protection can be enforced — it is not means-tested.','Part 36 offers allow costs to be set off against a QOCS protected claimant\'s damages — but this is different from enforcement without permission.'],
+  'cv23_4':['Each party paying their own costs describes "no order as to costs" — not "costs in the case".',null,'Immediate assessment on standard basis is not what "costs in the case" means — it simply defers determination.','Indemnity costs at every hearing is not what this order means — the basis of assessment is determined separately at the end.'],
+  'cv24_0':['Court of Appeal is too high — that is for appeals from circuit judges or High Court judges.',null,'High Court is too high for an appeal from a district judge — it goes to a circuit judge first.','Supreme Court is only for the most significant points of law of general public importance.'],
+  'cv24_1':['Permission is required in almost all civil cases — the exceptions are very limited.',null,'Permission is required for ALL appeals including second appeals — the test is just stricter for second appeals.','Permission is not automatic on timely filing — a real prospect of success or compelling reason must be shown.'],
+  'cv24_2':['The appeal court would decide differently is not the test — it must be WRONG, not merely different.',null,'Fresh evidence is a ground for allowing an appeal in exceptional circumstances but not the general test in CPR 52.21.','Failing to give adequate reasons is a procedural irregularity which could make the decision unjust — but the main test is whether it was WRONG.'],
+  'cr1_0':['12 hours maximum is wrong — initial detention is 24 hours under s.41 PACE before any extension.',null,'48 hours without extension is wrong — the initial period is 24 hours and extension requires superintendent authority.','6 hours is not a PACE detention period at all — this figure does not appear in the detention provisions.'],
+  'cr1_1':['The seriousness test and public interest test is not the correct terminology — it is the evidential stage and public interest stage.',null,'Sufficiency of evidence and gravity of offence is not the correct description of the Full Code Test stages.','Likelihood of conviction and cost of prosecution are not the two stages of the Full Code Test.'],
+  'cr1_2':['The police may not continue indefinitely — Code C.11 requires interviews to cease when all relevant questions have been asked.',null,'Suspects do not have to answer all questions — the right to silence exists, but s.34 inferences may be drawn.','The interview cannot continue indefinitely if the suspect refuses — Code C.11 requires it to cease.'],
+  'cr1_3':['Summary only describes offences like common assault — theft is triable either way.','Indictable only describes offences like murder or rape — theft is not in that category.',null,'The classification of theft does not depend on value — it is always either-way regardless of the amount stolen.'],
+  'cr1_4':['The right to be cautioned is separate from the right to legal advice — the caution is administered regardless.',null,'The right to remain silent flows from the caution — it is s.58 PACE that specifically provides the right to a solicitor.','Video recording is a Code C requirement but it is not the right that was specifically breached here.'],
+  'cr2_0':['Immediately sending to Crown Court is the procedure for INDICTABLE ONLY offences under s.51 CDA — robbery is either-way.',null,'Automatic election is wrong — it is the MAGISTRATES who first decide on allocation before the defendant gets a choice.','The CPS does not decide alone — the magistrates determine allocation after hearing from both parties.'],
+  'cr2_1':['A fresh application in the magistrates\' court is not permitted once a certificate of full argument has been issued — the next step is the Crown Court.',null,'There is no 14-day waiting period — the application to the Crown Court can be made promptly after the certificate.','Case stated is a way of appealing a conviction on a point of law — not a bail application route.'],
+  'cr2_2':['Previous convictions alone is too narrow — Sch.1 Part I requires consideration of all the listed factors.',null,'The victim\'s view is not a statutory factor under Bail Act 1976 Sch.1 — though it may be noted in practice.','Criminal record alone is too narrow — antecedents are just one of multiple factors under Sch.1.'],
+  'cr2_3':['Bail as of right for murder is wrong — s.25 CJPOA 1994 imposes the exceptional circumstances test.',null,'Bail is NEVER absolutely unavailable — s.25 allows it where exceptional circumstances justify it.','No previous convictions is not the test — the test is exceptional circumstances regardless of record.'],
+  'cr2_4':['s.17 CJA 1967 relates to majority verdicts — not the sending procedure for indictable only offences.',null,'s.9 Magistrates\' Courts Act 1980 deals with summary trial procedure — not sending to Crown Court.','s.24 Magistrates\' Courts Act 1980 deals with trial of juveniles — not sending of indictable only offences.'],
+  'cr3_0':['s.114(1)(d) interests of justice is a fallback gateway — s.116(2)(c) is the specific provision for witnesses outside the UK.',null,'s.117 covers business documents — not unavailable witnesses.','s.118 preserves common law exceptions — it does not deal with witnesses outside the UK.'],
+  'cr3_1':['Gateway (a) requires all parties to agree — the defence would not agree to its own client\'s bad character being admitted.','Gateway (g) is triggered by an attack on another\'s character — the prosecution is not relying on that here.',null,'Gateway (b) is where the DEFENDANT adduces their own bad character — not where the prosecution seeks to adduce it.'],
+  'cr3_2':['No consequences is wrong — gateway (g) is triggered by an attack on another person\'s character in cross-examination.',null,'The prosecution does not have to apply immediately — the application can be made at the appropriate time.','Gateway (g) can be triggered by cross-examination even where the defendant does not give oral evidence themselves.'],
+  'cr3_3':['Directing the jury to convict because of previous convictions would be a serious misdirection — the opposite is required.',null,'Conclusive proof is wrong — bad character evidence goes to propensity, not to proof of the current offence.','A direction to ignore it entirely would only be appropriate if the evidence had been wrongly admitted — if properly admitted it must be directed upon.'],
+  'cr3_4':['No direction is wrong — good character directions are mandatory where the defendant is of good character (Vye).',null,'Only a credibility direction is insufficient — both limbs (credibility AND propensity) must be given where D gives evidence (Vye).','The judge does NOT have a discretion whether to give good character directions — they are mandatory (subject to Hunter).'],
+  'cr4_0':['Only s.76(2)(b) is too narrow — s.78 should also be argued given the significant breach of Code C.','Only s.76(2)(a) oppression is possible but the facts describe circumstances more likely to engage s.76(2)(b) — and s.78 should also be argued.',null,'Only s.78 is too narrow — both s.76 routes and s.78 should be advanced to give the defence every possible argument.'],
+  'cr4_1':['Legal advice does NOT automatically prevent s.34 inferences — the jury decides if reliance was genuine.',null,'s.34 applies regardless of representation — having a solicitor does not block the inference.','s.34 operates independently of s.35 — failure to testify at trial is a separate matter under s.35.'],
+  'cr4_2':['No special direction is wrong — Turnbull requires a specific warning where the case depends substantially on disputed visual identification.',null,'A Lucas direction concerns lies told by the defendant — not visual identification.','A good character direction concerns the defendant\'s character — not the reliability of an identification witness.'],
+  'cr4_3':['The jury decides all QUESTIONS OF FACT including ultimately whether to convict — but admissibility is for the JUDGE alone.',null,'The magistrate and jury together is not correct — the voir dire is conducted by the JUDGE alone in the absence of the jury.','The Registrar of Criminal Appeals handles paperwork for appeals — not admissibility rulings at trial.'],
+  'cr4_4':['Mandatory conviction is wrong — s.35 permits an inference but the conviction cannot rest on the inference alone.',null,'Silence at trial is not irrelevant — s.35 specifically allows the jury to draw inferences from it.','The defendant is never presumed guilty — the burden of proof always remains on the prosecution.'],
+  'cr5_0':['Accepting the defence version automatically is wrong — where there is a material dispute the judge must hear evidence.',null,'The prosecution version is always used is wrong — where D disputes the basis, a Newton hearing must be held.','Referral to the Court of Appeal is not the procedure for disputed sentencing facts — Newton hearing is conducted by the trial judge.'],
+  'cr5_1':['No reduction is wrong — guilty pleas at the first stage attract a one third reduction under the Sentencing Council guideline.',null,'One quarter applies to guilty pleas at the PTPH — not at the very first stage.','One tenth applies at the door of the court or during the trial — not at the first stage of proceedings.'],
+  'cr5_2':['Unlimited power to vary is wrong — the power is time-limited to 56 days under the Crown Court\'s jurisdiction.',null,'Only the Court of Appeal can vary is wrong — the Crown Court retains the power for 56 days.','Varying at any time on prosecution application is wrong — the 56-day limit applies regardless of who applies.'],
+  'cr5_3':['Sentencing within their own powers is wrong where those powers are insufficient — committal is the mechanism.',null,'The summary offence does not automatically follow to the Crown Court — there are specific provisions governing this.','Acquitting on the either-way offence is wrong — the magistrates have convicted, they are deciding on sentence.'],
+  'cr5_4':['No minimum for drug offences is wrong — s.313 SA 2020 imposes a 7-year minimum for a THIRD Class A drug trafficking offence.',null,'7 years on a second conviction is wrong — s.313 applies on the THIRD conviction, not the second.','5 years for any Class A supply is wrong — the minimum under s.313 is 7 years and only applies on the third conviction.'],
+  'cr5_5':[null,'CJA 1988 is used for unduly lenient sentence references by the AG — not confiscation orders.','MDA 1971 deals with drug offences — confiscation is under POCA 2002, in the Crown Court.','SA 2020 deals with sentencing powers generally — confiscation is specifically under POCA 2002 s.6 in the Crown Court.'],
+  'cr6_0':['Court of Appeal applies to appeals from the Crown Court — youth court appeals go to the Crown Court first.',null,'High Court by case stated is available but only on a point of law — a full appeal against conviction and sentence goes to Crown Court by rehearing.','There IS a right of appeal from the youth court — it goes to the Crown Court.'],
+  'cr6_1':['Automatic sending to Crown Court applies to grave crimes — the youth court must consider whether s.18 GBH qualifies first.',null,'Election is a right for adults — young defendants cannot elect Crown Court trial.','The adult magistrates\' court does not deal with youth cases — the youth court has jurisdiction.'],
+  'cr6_2':['Unfettered discretion is wrong — the custody threshold must be met and age conditions must be satisfied.',null,'Persistent offender is an additional requirement only for 12-14 year olds — at 16, Millie does not need to be persistent.','14 years or more for an adult is the grave crime threshold for SENDING — it is not the DTO eligibility test.'],
+  'cr6_3':['Absolute right of appeal is wrong — leave is required for Crown Court appeals under the Criminal Appeal Act 1968.',null,'The prosecution does not agree to the appeal — leave is obtained from the trial judge or the Court of Appeal.','A certificate from the trial judge is one route but it is rarely granted — leave from the Court of Appeal is the primary route.'],
+  'cr6_4':[null,'28 days from sentence is wrong — the 28-day period runs from the date of CONVICTION.','21 days from conviction is wrong — the period is 28 days, not 21.','21 days from sentence is wrong on two counts — both the period (28 not 21) and the starting point (conviction not sentence) are wrong.'],
+  'cr6_5':['Requiring the Crown Court to re-sentence immediately is not within the AG\'s powers — the referral goes to the Court of Appeal.',null,'Writing to the judge is not a formal power — the s.36 CJA 1988 reference is the only mechanism.','There IS a mechanism — s.36 CJA 1988 gives the AG the specific power to refer unduly lenient sentences.'],
+};
 const CIVIL=[
 {id:'cv1',title:'Topic 1: General Matters',sub:'CPR overriding objective & ADR',syllabus:'SA1',qs:[
 {q:'You represent a claimant in a multi-track case. At a CMC, the judge criticises both parties for failing to consider mediation. She asks you to explain the court\'s duty under CPR 1.4. Which correctly states that duty?',opts:['[A] The court must order mediation before trial in all multi-track cases','[B] The court must actively manage cases, which includes encouraging the parties to use an ADR procedure if it considers that appropriate','[C] The court must refer the matter to mediation whenever one party requests it','[D] The court has no power to compel parties to engage in ADR'],ans:1,exp:'CPR 1.4(2)(e) — the court\'s duty to manage cases includes encouraging the parties to use an ADR procedure if the court considers that appropriate. Churchill confirmed courts can now go further and order ADR in appropriate cases.'},
@@ -625,7 +758,7 @@ function showTopic(id){
         if(done){if(j===q.ans)cls+=' correct';else if(j===sel&&sel!==q.ans)cls+=' wrong';}
         return`<div class="${cls}" id="o-${key}-${j}" onclick="${done?'':'pick(\''+id+'\','+i+','+j+')'}">${o}</div>`;
       }).join('')}</div>
-      ${done?`<div class="exp show"><strong>Correct:</strong> ${q.opts[q.ans]}<br><br>${q.exp}</div>`:`<div class="exp" id="exp-${key}"></div>`}
+      ${(()=>{if(!done)return`<div class="exp" id="exp-${key}"></div>`;const _wd=WRONGS_DATA[id+'_'+i];const _wh=_wd?'<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px"><div style="font-size:11px;font-weight:500;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Why the other options are wrong</div>'+q.opts.map((o,j)=>j===q.ans?'':'<div style="margin-bottom:6px"><span style="font-size:12px;font-weight:500;color:var(--text)">'+o.substring(0,3)+'</span><span style="font-size:12px;color:var(--text2)"> — '+(_wd[j]||'Incorrect.')+'</span></div>').join('')+'</div>':'';return'<div class="exp show"><strong>Correct:</strong> '+q.opts[q.ans]+'<br><br>'+q.exp+_wh+'</div>';})()}
     </div>`;
   });
   document.getElementById('t-questions').innerHTML=html;
@@ -654,7 +787,15 @@ function pick(wsId,idx,opt){
     el.onclick=null;
   }
   const exp=document.getElementById('exp-'+key);
-  if(exp){exp.innerHTML='<strong>Correct:</strong> '+q.opts[q.ans]+'<br><br>'+q.exp;exp.className='exp show';}
+  if(exp){
+    let wrongHtml='';
+    const wd=WRONGS_DATA[wsId+'_'+idx];
+    if(wd){
+      wrongHtml='<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px"><div style="font-size:11px;font-weight:500;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Why the other options are wrong</div>'+q.opts.map((o,j)=>j===q.ans?'':'<div style="margin-bottom:6px"><span style="font-size:12px;font-weight:500;color:var(--text)">'+o.substring(0,3)+'</span><span style="font-size:12px;color:var(--text2)"> — '+(wd[j]||'Incorrect.')+'</span></div>').join('')+'</div>';
+    }
+    exp.innerHTML='<strong>Correct:</strong> '+q.opts[q.ans]+'<br><br>'+q.exp+wrongHtml;
+    exp.className='exp show';
+  }
   const answered=Object.keys(s.answers).filter(k=>k.startsWith(wsId+'_')).length;
   updateRefPanel(wsId,idx,w.qs.length);
   if(answered===w.qs.length){
@@ -677,20 +818,30 @@ function toggleDone(id){
   refreshNav();refreshDash();
 }
 
+let dashView='all';
+function setDashView(v){
+  dashView=v;
+  ['all','civil','crim'].forEach(x=>{const el=document.getElementById('dt-'+x);if(el)el.className='dash-toggle'+(x===v?' active':'');});
+  refreshDash();
+}
 function refreshDash(){
-  const all=[...CIVIL,...CRIMINAL];
+  const allTopics=[...CIVIL,...CRIMINAL];
+  const all=dashView==='civil'?CIVIL:dashView==='crim'?CRIMINAL:allTopics;
   const done=all.filter(w=>ws(w.id).done).length;
   const att=all.filter(w=>(ws(w.id).scores||[]).length>0);
+  const totalMcqs=all.reduce((a,w)=>a+w.qs.length,0);
+  const doneMcqs=all.filter(w=>(ws(w.id).scores||[]).length>0).reduce((a,w)=>a+w.qs.length,0);
   const avg=att.length>0?Math.round(att.reduce((a,w)=>{
     const sc=ws(w.id).scores;
     const latest=sc[sc.length-1];
     return a+(latest/w.qs.length*10);
   },0)/att.length*10)/10:null;
-  const wk=all.filter(w=>{const s=ws(w.id).scores;return s&&s.length>0&&s[s.length-1]<7;});
+  const wk=all.filter(w=>{const s=ws(w.id).scores;return s&&s.length>0&&s[s.length-1]/w.qs.length<0.7;});
+  const label=dashView==='civil'?'Civil':dashView==='crim'?'Criminal':'All';
   document.getElementById('dash-stats').innerHTML=`
     <div class="stat-card"><div class="stat-lbl">Topics done</div><div class="stat-val">${done}/${all.length}</div></div>
-    <div class="stat-card"><div class="stat-lbl">MCQs done</div><div class="stat-val">${att.length}/${all.length}</div></div>
-    <div class="stat-card"><div class="stat-lbl">Avg score</div><div class="stat-val ${avg===null?'':avg>=8?'g':avg>=6?'a':'r'}">${avg===null?'—':avg+'/10'}</div></div>
+    <div class="stat-card"><div class="stat-lbl">MCQs done</div><div class="stat-val">${doneMcqs}/${totalMcqs}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Avg score</div><div class="stat-val ${avg===null?'':avg>=8?'g':avg>=6?'a':'r'}">${avg===null?'—':Math.round(avg)+'%'}</div></div>
     <div class="stat-card"><div class="stat-lbl">Weak spots</div><div class="stat-val ${wk.length>0?'r':''}">${wk.length}</div></div>`;
   const cvd=CIVIL.filter(w=>ws(w.id).done).length;
   const crd=CRIMINAL.filter(w=>ws(w.id).done).length;
@@ -700,15 +851,86 @@ function refreshDash(){
   document.getElementById('cr-lbl').textContent=crd+'/'+CRIMINAL.length+' topics completed ('+Math.round(crd/CRIMINAL.length*100)+'%)';
   const dw=document.getElementById('dash-weak');
   if(wk.length===0){dw.innerHTML='<p class="empty">No weak spots yet. Complete some MCQs to see results here.</p>';}
-  else{dw.innerHTML=wk.slice(0,5).map(w=>{const s=ws(w.id).scores;const l=s[s.length-1];return`<div class="weak-card"><div><div class="weak-title">${w.title}</div><div class="weak-sub">${w.sub}</div></div><div class="weak-score">${l}/${w.qs.length}</div></div>`;}).join('');}
+  else{dw.innerHTML=wk.slice(0,5).map(w=>{const s=ws(w.id).scores;const l=s[s.length-1];const pct=Math.round(l/w.qs.length*100);return`<div class="weak-card"><div><div class="weak-title">${w.title}</div><div class="weak-sub">${w.sub}</div></div><div class="weak-score">${l}/${w.qs.length} (${pct}%)</div></div>`;}).join('');}
 }
 
 function refreshWeak(){
   const all=[...CIVIL,...CRIMINAL];
-  const wk=all.filter(w=>{const s=ws(w.id).scores;return s&&s.length>0&&s[s.length-1]<7;});
   const el=document.getElementById('weak-list');
-  if(wk.length===0){el.innerHTML='<p class="empty">No weak spots yet — complete some MCQs to see your results here.</p>';return;}
-  el.innerHTML=wk.map(w=>{const s=ws(w.id).scores;const l=s[s.length-1];return`<div class="weak-card"><div><div class="weak-title">${w.title} — ${w.sub}</div><div class="weak-sub">${w.syllabus}</div></div><div class="weak-score">${l}/${w.qs.length}</div></div>`;}).join('');
+  
+  // Collect all individual wrong answers across all attempted topics
+  let wrongItems=[];
+  all.forEach(w=>{
+    const s=ws(w.id);
+    if(!s.answers||Object.keys(s.answers).length===0)return;
+    w.qs.forEach((q,i)=>{
+      const key=w.id+'_'+i;
+      if(s.answers[key]!==undefined && s.answers[key]!==q.ans){
+        wrongItems.push({
+          topicId:w.id,
+          topicTitle:w.title,
+          topicSub:w.sub,
+          syllabus:w.syllabus,
+          qIdx:i,
+          qText:q.q,
+          yourAnswer:q.opts[s.answers[key]],
+          correctAnswer:q.opts[q.ans],
+          exp:q.exp,
+          key:key
+        });
+      }
+    });
+  });
+  
+  if(wrongItems.length===0){
+    el.innerHTML='<p class="empty">No wrong answers yet — complete some MCQs to identify your weak spots.</p>';
+    return;
+  }
+  
+  // Group by topic
+  const byTopic={};
+  wrongItems.forEach(item=>{
+    if(!byTopic[item.topicId])byTopic[item.topicId]={title:item.topicTitle,sub:item.topicSub,syllabus:item.syllabus,items:[]};
+    byTopic[item.topicId].items.push(item);
+  });
+  
+  let html='<div style="font-size:12px;color:var(--text2);margin-bottom:1rem">'+wrongItems.length+' incorrect answer'+(wrongItems.length===1?'':'s')+' across '+Object.keys(byTopic).length+' topic'+(Object.keys(byTopic).length===1?'':'s')+'. Click any question to see the explanation.</div>';
+  
+  Object.values(byTopic).forEach(topic=>{
+    html+=`<div style="margin-bottom:1.25rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <div>
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${topic.title}</div>
+          <div style="font-size:11px;color:var(--text3)">${topic.sub} · ${topic.syllabus}</div>
+        </div>
+        <div style="background:var(--danger-light);color:var(--danger);font-size:11px;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace;font-weight:500">${topic.items.length} wrong</div>
+      </div>`;
+    topic.items.forEach((item,idx)=>{
+      const wid='weak-'+item.key;
+      html+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:6px;overflow:hidden">
+        <div style="padding:10px 14px;cursor:pointer" onclick="toggleWeak('${wid}')">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:3px;font-family:'DM Mono',monospace">Q${item.qIdx+1}</div>
+          <div style="font-size:13px;color:var(--text);margin-bottom:6px;line-height:1.45">${item.qText}</div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <div style="font-size:11px;padding:4px 8px;border-radius:4px;background:var(--danger-light);color:var(--danger)">✗ Your answer: ${item.yourAnswer}</div>
+            <div style="font-size:11px;padding:4px 8px;border-radius:4px;background:var(--success-light);color:var(--success)">✓ Correct: ${item.correctAnswer}</div>
+          </div>
+        </div>
+        <div id="${wid}" style="display:none;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2)">
+          <div style="font-size:12px;color:var(--text2);line-height:1.6;border-left:3px solid var(--accent);padding-left:10px">${item.exp}</div>
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  
+  el.innerHTML=html;
+}
+
+function toggleWeak(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.display=el.style.display==='none'?'block':'none';
 }
 
 const LAW={
