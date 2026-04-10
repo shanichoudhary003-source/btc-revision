@@ -124,6 +124,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .q-dot.correct{background:var(--success-light);color:var(--success);border-color:var(--success)}
 .q-dot.wrong{background:var(--danger-light);color:var(--danger);border-color:var(--danger)}
 .q-dot.current{border-color:var(--text2);color:var(--text)}
+.retry-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--warn-light);border:1px solid var(--warn);border-radius:var(--r);padding:10px 14px;margin-bottom:1rem}
+.retry-banner-txt{font-size:12px;color:var(--warn);font-weight:500}
+.retry-banner-sub{font-size:11px;color:var(--warn);opacity:.8;margin-top:1px}
+.retry-exit{padding:5px 12px;border-radius:var(--r);border:1px solid var(--warn);background:transparent;color:var(--warn);font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:all .15s}
+.retry-exit:hover{background:var(--warn);color:#fff}
 @media(max-width:680px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border)}.stats-row{grid-template-columns:1fr 1fr}.dash-grid{grid-template-columns:1fr}.guide-grid{grid-template-columns:1fr}.ref-panel{display:none}.resize-handle{display:none}}
 </style>
 </head>
@@ -599,10 +604,19 @@ html.dark .oc-badge.io{background:#1a2e24;color:#7bc4a0}
     <div class="page-hdr"><h1 id="t-title"></h1><p id="t-sub"></p></div>
     <div class="topic-actions">
       <button class="done-btn outline" id="t-done-btn" onclick="toggleDone(currentTopic)"></button>
-      <span style="font-size:12px;color:var(--text3)" id="t-score-lbl"></span>
+      <button class="done-btn outline" id="t-retry-btn" onclick="startRetry()" style="display:none">↺ Retry wrong answers</button>
+      <button class="done-btn outline" id="t-reset-btn" onclick="resetTopic()" style="color:var(--danger);border-color:var(--danger);display:none">Reset topic</button>
+      <span style="font-size:12px;color:var(--text3);margin-left:auto" id="t-score-lbl"></span>
     </div>
     <div class="topic-layout" id="topic-layout">
       <div class="topic-questions">
+        <div id="retry-banner" style="display:none" class="retry-banner">
+          <div>
+            <div class="retry-banner-txt">↺ Retry mode — wrong answers only</div>
+            <div class="retry-banner-sub" id="retry-banner-sub"></div>
+          </div>
+          <button class="retry-exit" onclick="exitRetry()">Exit retry</button>
+        </div>
         <div id="t-questions"></div>
         <div class="score-box" id="t-score-box">
           <div><div class="score-main" id="t-score-main"></div><div class="score-sub" id="t-score-sub"></div></div>
@@ -991,6 +1005,102 @@ async function gistLoad(){
 }
 
 function load(){try{const s=localStorage.getItem('btc_v4');if(s)S=JSON.parse(s);}catch(e){S={};}}
+function resetTopic(){
+  if(!currentTopic)return;
+  const all=[...CIVIL,...CRIMINAL];
+  const w=all.find(x=>x.id===currentTopic);if(!w)return;
+  if(!confirm('Reset all answers and scores for "'+w.title+'"? This cannot be undone.'))return;
+  S[currentTopic]={done:false,scores:[],answers:{}};
+  save();
+  showTopic(currentTopic);
+}
+
+let retryState=null; // {indices:[],retryAnswers:{},topic}
+
+function startRetry(){
+  if(!currentTopic)return;
+  const all=[...CIVIL,...CRIMINAL];
+  const w=all.find(x=>x.id===currentTopic);if(!w)return;
+  const s=ws(currentTopic);
+  const wrongIndices=w.qs.map((_,i)=>i).filter(i=>s.answers&&s.answers[currentTopic+'_'+i]!==undefined&&s.answers[currentTopic+'_'+i]!==w.qs[i].ans);
+  if(!wrongIndices.length)return;
+  retryState={indices:wrongIndices,retryAnswers:{},topic:currentTopic};
+  renderRetry();
+}
+
+function renderRetry(){
+  if(!retryState)return;
+  const all=[...CIVIL,...CRIMINAL];
+  const w=all.find(x=>x.id===retryState.topic);if(!w)return;
+  const banner=document.getElementById('retry-banner');
+  const sub=document.getElementById('retry-banner-sub');
+  if(banner)banner.style.display='flex';
+  const done=Object.keys(retryState.retryAnswers).length;
+  if(sub)sub.textContent=done+' of '+retryState.indices.length+' answered';
+  let html='';
+  retryState.indices.forEach((qIdx,pos)=>{
+    const q=w.qs[qIdx];
+    const key='r_'+qIdx;
+    const answered=retryState.retryAnswers[key]!==undefined;
+    const sel=answered?retryState.retryAnswers[key]:-1;
+    html+=`<div class="q-wrap" id="rqb-${key}">
+      <div class="q-num">Retry ${pos+1} of ${retryState.indices.length} — original Q${qIdx+1}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="opts">${q.opts.map((o,j)=>{
+        let cls='opt';
+        if(answered){if(j===q.ans)cls+=' correct';else if(j===sel&&sel!==q.ans)cls+=' wrong';}
+        return`<div class="${cls}" id="ro-${key}-${j}" onclick="${answered?'':'pickRetry('+qIdx+','+j+')'}">${o}</div>`;
+      }).join('')}</div>
+      ${answered?`<div class="exp show"><strong>Correct:</strong> ${q.opts[q.ans]}<br><br>${q.exp}</div>`:`<div class="exp" id="rexp-${key}"></div>`}
+    </div>`;
+  });
+  // Score box when all done
+  const allDone=Object.keys(retryState.retryAnswers).length===retryState.indices.length;
+  if(allDone){
+    const correct=retryState.indices.filter(qi=>retryState.retryAnswers['r_'+qi]===w.qs[qi].ans).length;
+    const pct=correct/retryState.indices.length;
+    html+=`<div class="score-box show" style="margin-top:1rem">
+      <div><div class="score-main">Retry score: ${correct}/${retryState.indices.length}</div>
+      <div class="score-sub">${pct===1?'All correct — excellent!':pct>=0.8?'Strong — nearly there.':pct>=0.6?'Improving — keep drilling.':'Still struggling — return to the BPP material.'}</div></div>
+      <button class="done-btn" onclick="exitRetry()">Back to full topic</button>
+    </div>`;
+  }
+  document.getElementById('t-questions').innerHTML=html;
+  if(sub)sub.textContent=Object.keys(retryState.retryAnswers).length+' of '+retryState.indices.length+' answered';
+  updateRefPanel(retryState.topic,0,w.qs.length);
+}
+
+function pickRetry(qIdx,opt){
+  if(!retryState)return;
+  const key='r_'+qIdx;
+  if(retryState.retryAnswers[key]!==undefined)return;
+  retryState.retryAnswers[key]=opt;
+  const all=[...CIVIL,...CRIMINAL];
+  const w=all.find(x=>x.id===retryState.topic);if(!w)return;
+  const q=w.qs[qIdx];
+  for(let i=0;i<q.opts.length;i++){
+    const el=document.getElementById('ro-'+key+'-'+i);if(!el)continue;
+    el.className='opt';
+    if(i===q.ans)el.className+=' correct';
+    else if(i===opt&&opt!==q.ans)el.className+=' wrong';
+    el.onclick=null;
+  }
+  const exp=document.getElementById('rexp-'+key);
+  if(exp){exp.innerHTML='<strong>Correct:</strong> '+q.opts[q.ans]+'<br><br>'+q.exp;exp.className='exp show';}
+  const banner=document.getElementById('retry-banner-sub');
+  if(banner)banner.textContent=Object.keys(retryState.retryAnswers).length+' of '+retryState.indices.length+' answered';
+  // Check if all done — re-render to show score
+  if(Object.keys(retryState.retryAnswers).length===retryState.indices.length){
+    renderRetry();
+  }
+}
+
+function exitRetry(){
+  retryState=null;
+  document.getElementById('retry-banner').style.display='none';
+  showTopic(currentTopic);
+}
+
 function save(){
   try{localStorage.setItem('btc_v4',JSON.stringify(S));}catch(e){}
   if(GIST_TOKEN){clearTimeout(syncTimer);syncTimer=setTimeout(gistSave,1500);}
@@ -1094,6 +1204,14 @@ function showTopic(id){
   db.textContent=s.done?'✓ Completed':'Mark as complete';
   db.className=s.done?'done-btn':'done-btn outline';
   document.getElementById('t-score-lbl').textContent=s.scores&&s.scores.length?'Best score: '+Math.max(...s.scores)+'/'+w.qs.length:'Not yet attempted';
+  // Show reset if any answers recorded; show retry if any wrong answers
+  const anyAnswered=s.answers&&Object.keys(s.answers).some(k=>k.startsWith(id+'_'));
+  const wrongCount=anyAnswered?w.qs.filter((_,i)=>s.answers[id+'_'+i]!==undefined&&s.answers[id+'_'+i]!==_.ans).length:0;
+  const resetBtn=document.getElementById('t-reset-btn');
+  const retryBtn=document.getElementById('t-retry-btn');
+  if(resetBtn)resetBtn.style.display=anyAnswered?'':'none';
+  if(retryBtn)retryBtn.style.display=wrongCount>0?'':'none';
+  document.getElementById('retry-banner').style.display='none';
   let html='';
   w.qs.forEach((q,i)=>{
     const key=id+'_'+i;
