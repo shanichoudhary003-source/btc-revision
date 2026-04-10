@@ -145,6 +145,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <button class="nav-btn active" onclick="showPage('dash')">Dashboard</button>
     <button class="nav-btn" onclick="showPage('weak')">Weak spots</button>
     <button class="nav-btn" onclick="showPage('guide')">Study guide</button>
+    <button class="nav-btn" onclick="showPage('offences')">⚖ Offence classifications</button>
+    <button class="nav-btn" onclick="showPage('timelimits')">⏱ Time limits</button>
   </div>
   <div class="nav-section" id="nav-civil"><div class="nav-lbl">Civil Litigation</div></div>
   <div class="nav-section" id="nav-crim"><div class="nav-lbl">Criminal Litigation</div></div>
@@ -246,6 +248,353 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div></div>
     </div>
   </div>
+<div id="page-offences" class="page">
+<div class="page-hdr"><h1>Offence Classifications</h1><p>Summary only, either-way and indictable only offences you must know by heart for the exam.</p></div>
+<style>
+.oc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+.oc-col{border-radius:var(--rl);overflow:hidden;border:1px solid var(--border)}
+.oc-hdr{padding:10px 14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace}
+.oc-hdr.so{background:#fde8e8;color:#7a1a1a}
+.oc-hdr.ew{background:#fdf2e3;color:#7a4f1a}
+.oc-hdr.io{background:#e8f0ed;color:#1e3329}
+html.dark .oc-hdr.so{background:#2a0f0f;color:#e07070}
+html.dark .oc-hdr.ew{background:#2a1f0a;color:#d4a055}
+html.dark .oc-hdr.io{background:#1a2e24;color:#7bc4a0}
+.oc-body{padding:10px 14px;background:var(--surface)}
+.oc-section-lbl{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace;margin:10px 0 4px;border-top:1px solid var(--border);padding-top:8px}
+.oc-section-lbl:first-child{border-top:none;padding-top:0;margin-top:0}
+.oc-item{font-size:12px;color:var(--text2);padding:3px 0;border-bottom:1px solid var(--border);line-height:1.4}
+.oc-item:last-child{border-bottom:none}
+.oc-item strong{color:var(--text);font-weight:500}
+.oc-note{font-size:11px;color:var(--text3);font-style:italic;margin-top:3px}
+.oc-badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-weight:500;margin-left:4px;vertical-align:middle}
+.oc-badge.so{background:#fde8e8;color:#7a1a1a}
+.oc-badge.ew{background:#fdf2e3;color:#7a4f1a}
+.oc-badge.io{background:#e8f0ed;color:#1e3329}
+html.dark .oc-badge.so{background:#2a0f0f;color:#e07070}
+html.dark .oc-badge.ew{background:#2a1f0a;color:#d4a055}
+html.dark .oc-badge.io{background:#1a2e24;color:#7bc4a0}
+.oc-legend{display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+.oc-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.oc-legend-dot{width:10px;height:10px;border-radius:50%}
+.oc-legend-dot.so{background:#7a1a1a}
+.oc-legend-dot.ew{background:#7a4f1a}
+.oc-legend-dot.io{background:#2d4a3e}
+.oc-full-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:.5rem}
+.oc-full-table th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);font-family:'DM Mono',monospace;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface2)}
+.oc-full-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.oc-full-table tr:last-child td{border-bottom:none}
+.oc-full-table td:first-child{font-weight:500;color:var(--text)}
+@media(max-width:700px){.oc-grid{grid-template-columns:1fr}}
+</style>
+
+<div class="oc-legend">
+  <div class="oc-legend-item"><div class="oc-legend-dot so"></div>Summary only — magistrates' court only</div>
+  <div class="oc-legend-item"><div class="oc-legend-dot ew"></div>Either-way — magistrates' or Crown Court</div>
+  <div class="oc-legend-item"><div class="oc-legend-dot io"></div>Indictable only — Crown Court only</div>
+</div>
+
+<div class="oc-grid">
+  <div class="oc-col">
+    <div class="oc-hdr so">Summary Only</div>
+    <div class="oc-body">
+      <div class="oc-section-lbl">Violence</div>
+      <div class="oc-item"><strong>Common assault</strong> s.39 CJA 1988<div class="oc-note">Max 6 months / level 5 fine</div></div>
+      <div class="oc-item"><strong>Assault by beating</strong> s.39 CJA 1988<div class="oc-note">Max 6 months</div></div>
+
+      <div class="oc-section-lbl">Driving</div>
+      <div class="oc-item"><strong>Speeding</strong></div>
+      <div class="oc-item"><strong>No insurance</strong></div>
+      <div class="oc-item"><strong>Careless driving</strong></div>
+      <div class="oc-item"><strong>Driving whilst disqualified</strong></div>
+
+      <div class="oc-section-lbl">Public order</div>
+      <div class="oc-item"><strong>Drunk & disorderly</strong></div>
+      <div class="oc-item"><strong>s.5 Public Order Act</strong><div class="oc-note">Threatening/abusive words</div></div>
+
+      <div class="oc-section-lbl">Property</div>
+      <div class="oc-item"><strong>Criminal damage</strong><div class="oc-note">Value ≤ £5,000 only — max 3 months</div></div>
+    </div>
+  </div>
+
+  <div class="oc-col">
+    <div class="oc-hdr ew">Either-Way</div>
+    <div class="oc-body">
+      <div class="oc-section-lbl">Violence</div>
+      <div class="oc-item"><strong>ABH</strong> s.47 OAPA 1861<div class="oc-note">Max 5 years Crown Court</div></div>
+      <div class="oc-item"><strong>GBH / Unlawful wounding</strong> s.20 OAPA 1861<div class="oc-note">Max 5 years Crown Court</div></div>
+
+      <div class="oc-section-lbl">Property / Dishonesty</div>
+      <div class="oc-item"><strong>Theft</strong><div class="oc-note">Max 7 years Crown Court</div></div>
+      <div class="oc-item"><strong>Burglary</strong><div class="oc-note">Max 14 years — but domestic burglary can attract minimum sentences</div></div>
+      <div class="oc-item"><strong>Handling stolen goods</strong></div>
+      <div class="oc-item"><strong>Fraud</strong></div>
+      <div class="oc-item"><strong>Going equipped</strong></div>
+      <div class="oc-item"><strong>Making off without payment</strong></div>
+      <div class="oc-item"><strong>Criminal damage</strong><div class="oc-note">Value > £5,000</div></div>
+
+      <div class="oc-section-lbl">Drugs</div>
+      <div class="oc-item"><strong>Possession Class A/B/C</strong></div>
+      <div class="oc-item"><strong>Supply Class B/C</strong></div>
+
+      <div class="oc-section-lbl">Sexual</div>
+      <div class="oc-item"><strong>Sexual assault</strong></div>
+    </div>
+  </div>
+
+  <div class="oc-col">
+    <div class="oc-hdr io">Indictable Only</div>
+    <div class="oc-body">
+      <div class="oc-section-lbl">Violence / Homicide</div>
+      <div class="oc-item"><strong>Murder</strong><div class="oc-note">Mandatory life sentence</div></div>
+      <div class="oc-item"><strong>Manslaughter</strong></div>
+      <div class="oc-item"><strong>GBH with intent</strong> s.18 OAPA 1861<div class="oc-note">Max life imprisonment</div></div>
+      <div class="oc-item"><strong>Wounding with intent</strong> s.18 OAPA 1861</div>
+
+      <div class="oc-section-lbl">Sexual</div>
+      <div class="oc-item"><strong>Rape</strong><div class="oc-note">Max life imprisonment</div></div>
+      <div class="oc-item"><strong>Assault by penetration</strong></div>
+      <div class="oc-item"><strong>Causing/inciting child sex</strong></div>
+
+      <div class="oc-section-lbl">Property / Dishonesty</div>
+      <div class="oc-item"><strong>Robbery</strong><div class="oc-note">Max life imprisonment</div></div>
+      <div class="oc-item"><strong>Aggravated burglary</strong><div class="oc-note">Max life imprisonment</div></div>
+
+      <div class="oc-section-lbl">Drugs</div>
+      <div class="oc-item"><strong>Supply Class A</strong><div class="oc-note">Max life imprisonment</div></div>
+      <div class="oc-item"><strong>Possession with intent — Class A</strong></div>
+
+      <div class="oc-section-lbl">Other</div>
+      <div class="oc-item"><strong>Kidnapping</strong></div>
+      <div class="oc-item"><strong>False imprisonment</strong></div>
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px;margin-top:.5rem">
+  <div style="font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace;margin-bottom:.75rem">Key exam traps — easily confused</div>
+  <table class="oc-full-table">
+    <tr><th>Offence</th><th>Classification</th><th>Common mistake</th></tr>
+    <tr><td>Common assault</td><td><span class="oc-badge so">Summary only</span></td><td>Often confused with ABH — assault is SO, ABH is EW</td></tr>
+    <tr><td>ABH s.47</td><td><span class="oc-badge ew">Either-way</span></td><td>Sounds serious but it's EW not IO</td></tr>
+    <tr><td>GBH s.20</td><td><span class="oc-badge ew">Either-way</span></td><td>GBH without intent only — s.18 WITH intent is IO</td></tr>
+    <tr><td>GBH s.18</td><td><span class="oc-badge io">Indictable only</span></td><td>The intent element elevates it to IO</td></tr>
+    <tr><td>Theft</td><td><span class="oc-badge ew">Either-way</span></td><td>Max 7 years — not IO despite sounding serious</td></tr>
+    <tr><td>Robbery</td><td><span class="oc-badge io">Indictable only</span></td><td>NOT the same as theft — force/threat elevates to IO, max life</td></tr>
+    <tr><td>Burglary</td><td><span class="oc-badge ew">Either-way</span></td><td>EW — but aggravated burglary is IO</td></tr>
+    <tr><td>Criminal damage</td><td><span class="oc-badge so">SO</span> / <span class="oc-badge ew">EW</span></td><td>≤£5,000 = summary only (max 3 months). >£5,000 = either-way</td></tr>
+    <tr><td>Supply Class A drugs</td><td><span class="oc-badge io">Indictable only</span></td><td>Supply Class B/C = EW. Supply Class A = IO</td></tr>
+    <tr><td>Rape</td><td><span class="oc-badge io">Indictable only</span></td><td>All penetrative sexual offences are IO</td></tr>
+  </table>
+</div>
+</div>
+
+<!-- ===================== TIME LIMITS PAGE ===================== -->
+
+<div id="page-timelimits" class="page">
+<div class="page-hdr"><h1>Time Limits & Key Periods</h1><p>Every deadline, threshold and time period you need to know — criminal and civil.</p></div>
+<style>
+.tl-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.tl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.tl-card-hdr{padding:9px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:6px}
+.tl-card-hdr .tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tl-dot.crim{background:#7a1a1a}
+.tl-dot.civil{background:#2d4a3e}
+.tl-dot.both{background:#7a4f1a}
+.tl-rows{padding:0}
+.tl-row{display:flex;align-items:baseline;justify-content:space-between;padding:8px 14px;border-bottom:1px solid var(--border);gap:1rem}
+.tl-row:last-child{border-bottom:none}
+.tl-label{font-size:12px;color:var(--text2);flex:1;line-height:1.4}
+.tl-label em{font-style:normal;color:var(--text3);font-size:11px;display:block;margin-top:1px}
+.tl-value{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text);flex-shrink:0;text-align:right}
+.tl-value.warn{color:var(--warn)}
+.tl-value.danger{color:var(--danger)}
+.tl-value.success{color:var(--success)}
+.tl-sticky-row{padding:8px 14px;border-bottom:1px solid var(--border)}
+.tl-sticky-row:last-child{border-bottom:none}
+.tl-sticky-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px}
+.tl-sticky-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent);font-weight:500}
+.tl-sticky-note{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4}
+@media(max-width:700px){.tl-grid{grid-template-columns:1fr}}
+</style>
+
+<div class="tl-grid">
+
+  <!-- CRIMINAL: Police station -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot crim"></div>Criminal — Police Station</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Initial detention without charge</div><div class="tl-value">24 hrs</div></div>
+      <div class="tl-row"><div class="tl-label">Extension by superintendent</div><div class="tl-value warn">36 hrs</div></div>
+      <div class="tl-row"><div class="tl-label">Maximum detention (magistrates' warrant)<div class="tl-label"><em>Indictable only</em></div></div><div class="tl-value danger">96 hrs</div></div>
+      <div class="tl-row"><div class="tl-label">Right to legal advice — delay permitted<div class="tl-label"><em>Max delay, serious cases</em></div></div><div class="tl-value warn">36 hrs</div></div>
+    </div>
+  </div>
+
+  <!-- CRIMINAL: Bail & Remand -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot crim"></div>Criminal — Bail & Remand</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Adjournment for sentence — defendant on bail</div><div class="tl-value">4 weeks</div></div>
+      <div class="tl-row"><div class="tl-label">Adjournment for sentence — defendant in custody</div><div class="tl-value warn">3 weeks</div></div>
+      <div class="tl-row"><div class="tl-label">Custody time limit — magistrates' court (indictable)</div><div class="tl-value warn">70 days</div></div>
+      <div class="tl-row"><div class="tl-label">Custody time limit — Crown Court</div><div class="tl-value danger">182 days</div></div>
+    </div>
+  </div>
+
+  <!-- CRIMINAL: Bad Character notices -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot crim"></div>Criminal — Bad Character Notices (Part 21 CrimPR)</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Prosecution notice — magistrates' court<div class="tl-label"><em>After not guilty plea</em></div></div><div class="tl-value warn">20 bus. days</div></div>
+      <div class="tl-row"><div class="tl-label">Prosecution notice — Crown Court<div class="tl-label"><em>After not guilty plea</em></div></div><div class="tl-value">10 bus. days</div></div>
+      <div class="tl-row"><div class="tl-label">Co-defendant notice — both courts<div class="tl-label"><em>After prosecution discloses material</em></div></div><div class="tl-value">10 bus. days</div></div>
+      <div class="tl-row"><div class="tl-label">Response to bad character notice</div><div class="tl-value">10 bus. days</div></div>
+      <div class="tl-row"><div class="tl-label">Non-defendant bad character application</div><div class="tl-value">10 bus. days</div></div>
+    </div>
+  </div>
+
+  <!-- CRIMINAL: Appeals -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot crim"></div>Criminal — Appeals</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Appeal from magistrates' to Crown Court<div class="tl-label"><em>From date of sentence</em></div></div><div class="tl-value">15 bus. days</div></div>
+      <div class="tl-row"><div class="tl-label">Leave to appeal — Crown Court to Court of Appeal<div class="tl-label"><em>From date of conviction</em></div></div><div class="tl-value warn">28 days</div></div>
+      <div class="tl-row"><div class="tl-label">AG unduly lenient sentence reference</div><div class="tl-value warn">28 days</div></div>
+      <div class="tl-row"><div class="tl-label">Crown Court vary/rescind sentence</div><div class="tl-value danger">56 days</div></div>
+    </div>
+  </div>
+
+  <!-- CRIMINAL: Sentencing -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot crim"></div>Criminal — Sentencing periods</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Suspended sentence — magistrates' max custodial term</div><div class="tl-value">12 months</div></div>
+      <div class="tl-row"><div class="tl-label">Suspended sentence — Crown Court max custodial term</div><div class="tl-value">2 years</div></div>
+      <div class="tl-row"><div class="tl-label">Operational period (suspended sentence)</div><div class="tl-value">6m–2 yrs</div></div>
+      <div class="tl-row"><div class="tl-label">Supervision period (suspended sentence)<div class="tl-label"><em>Must be ≤ operational period</em></div></div><div class="tl-value">6m–2 yrs</div></div>
+      <div class="tl-row"><div class="tl-label">Magistrates' max — summary only offence</div><div class="tl-value">6 months</div></div>
+      <div class="tl-row"><div class="tl-label">Magistrates' max — either-way offence</div><div class="tl-value warn">12 months</div></div>
+      <div class="tl-row"><div class="tl-label">Bail curfew credit ratio<div class="tl-label"><em>Must be ≥ 9 hrs/day electronically monitored</em></div></div><div class="tl-value">½ day per day</div></div>
+      <div class="tl-row"><div class="tl-label">Suspended sentence breach — 2nd breach window</div><div class="tl-value warn">12 months</div></div>
+    </div>
+  </div>
+
+  <!-- CRIMINAL: Minimum sentences -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot crim"></div>Criminal — Minimum Sentences</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">3rd Class A drug trafficking offence</div><div class="tl-value danger">7 years</div></div>
+      <div class="tl-row"><div class="tl-label">3rd domestic burglary</div><div class="tl-value danger">3 years</div></div>
+      <div class="tl-row"><div class="tl-label">Certain firearms offences</div><div class="tl-value danger">5 years</div></div>
+      <div class="tl-row"><div class="tl-label">2nd possession of offensive weapon</div><div class="tl-value warn">6 months</div></div>
+      <div class="tl-row"><div class="tl-label">Threatening with weapon</div><div class="tl-value warn">6 months</div></div>
+      <div class="tl-row"><div class="tl-label">Guilty plea discount on minimum — minimum final sentence<div class="tl-label"><em>Unless court finds minimum itself unjust</em></div></div><div class="tl-value">80% of min</div></div>
+    </div>
+  </div>
+
+  <!-- CIVIL: Limitation -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot civil"></div>Civil — Limitation Periods</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Contract</div><div class="tl-value">6 years</div></div>
+      <div class="tl-row"><div class="tl-label">Tort (general)</div><div class="tl-value">6 years</div></div>
+      <div class="tl-row"><div class="tl-label">Personal injury</div><div class="tl-value warn">3 years</div></div>
+      <div class="tl-row"><div class="tl-label">Fatal accidents</div><div class="tl-value warn">3 years</div></div>
+      <div class="tl-row"><div class="tl-label">Latent damage — from date of knowledge</div><div class="tl-value warn">3 years</div></div>
+      <div class="tl-row"><div class="tl-label">Latent damage — longstop from act of negligence</div><div class="tl-value danger">15 years</div></div>
+      <div class="tl-row"><div class="tl-label">Defamation</div><div class="tl-value warn">1 year</div></div>
+      <div class="tl-row"><div class="tl-label">Contribution claims</div><div class="tl-value warn">2 years</div></div>
+      <div class="tl-row"><div class="tl-label">Judgment enforcement</div><div class="tl-value">6 years</div></div>
+      <div class="tl-row"><div class="tl-label">Minor — limitation runs from<div class="tl-label"><em>s.28 LA 1980</em></div></div><div class="tl-value success">18th birthday</div></div>
+    </div>
+  </div>
+
+  <!-- CIVIL: Service & Claim forms -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot civil"></div>Civil — Service & Claim Forms</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Claim form validity — within jurisdiction</div><div class="tl-value warn">4 months</div></div>
+      <div class="tl-row"><div class="tl-label">Claim form validity — out of jurisdiction</div><div class="tl-value warn">6 months</div></div>
+      <div class="tl-row"><div class="tl-label">Deemed service — first class post</div><div class="tl-value">2nd bus. day</div></div>
+      <div class="tl-row"><div class="tl-label">Deemed service — DX</div><div class="tl-value">2nd bus. day</div></div>
+      <div class="tl-row"><div class="tl-label">Deemed service — fax (before 4:30pm)</div><div class="tl-value">Same day</div></div>
+      <div class="tl-row"><div class="tl-label">Deemed service — fax (after 4:30pm)</div><div class="tl-value">Next bus. day</div></div>
+      <div class="tl-row"><div class="tl-label">Deemed service — personal service</div><div class="tl-value">Same day</div></div>
+    </div>
+  </div>
+
+  <!-- CIVIL: Statements of case -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot civil"></div>Civil — Statements of Case</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Acknowledgment of service</div><div class="tl-value">14 days</div></div>
+      <div class="tl-row"><div class="tl-label">Defence — no acknowledgment filed</div><div class="tl-value warn">14 days</div></div>
+      <div class="tl-row"><div class="tl-label">Defence — acknowledgment filed</div><div class="tl-value warn">28 days</div></div>
+      <div class="tl-row"><div class="tl-label">Parties' agreement to extend defence deadline<div class="tl-label"><em>Without court permission</em></div></div><div class="tl-value">+ 28 days max</div></div>
+      <div class="tl-row"><div class="tl-label">Witness summons — minimum before hearing</div><div class="tl-value">7 days</div></div>
+      <div class="tl-row"><div class="tl-label">Part 18 request — response</div><div class="tl-value">As specified</div></div>
+    </div>
+  </div>
+
+  <!-- CIVIL: Interim applications & Part 36 -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot civil"></div>Civil — Interim Applications & Part 36</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Interim application notice — minimum notice</div><div class="tl-value warn">3 clear days</div></div>
+      <div class="tl-row"><div class="tl-label">Part 36 — relevant period (minimum)</div><div class="tl-value warn">21 days</div></div>
+      <div class="tl-row"><div class="tl-label">Written questions to expert<div class="tl-label"><em>From service of expert's report</em></div></div><div class="tl-value">28 days</div></div>
+      <div class="tl-row"><div class="tl-label">Summary assessment — costs schedule filed before hearing</div><div class="tl-value">24 hours</div></div>
+      <div class="tl-row"><div class="tl-label">Appeal — appellant's notice</div><div class="tl-value warn">21 days</div></div>
+    </div>
+  </div>
+
+  <!-- CIVIL: Pre-action PI protocol -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot civil"></div>Civil — PI Pre-Action Protocol</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Acknowledge letter of claim</div><div class="tl-value warn">21 days</div></div>
+      <div class="tl-row"><div class="tl-label">Investigate and respond after acknowledgment</div><div class="tl-value danger">3 months</div></div>
+      <div class="tl-row"><div class="tl-label">Adjournment — defendant on bail (sentencing)</div><div class="tl-value">4 weeks</div></div>
+      <div class="tl-row"><div class="tl-label">Adjournment — defendant in custody (sentencing)</div><div class="tl-value">3 weeks</div></div>
+    </div>
+  </div>
+
+  <!-- CIVIL: Bad character (civil equivalent — disclosure) -->
+  <div class="tl-card">
+    <div class="tl-card-hdr"><div class="tl-dot civil"></div>Civil — Disclosure & Third Party</div>
+    <div class="tl-rows">
+      <div class="tl-row"><div class="tl-label">Standard disclosure list — served with</div><div class="tl-value">Directions</div></div>
+      <div class="tl-row"><div class="tl-label">Inadvertent disclosure — apply to restrain use</div><div class="tl-value">Promptly</div></div>
+      <div class="tl-row"><div class="tl-label">Costs budget — file before<div class="tl-label"><em>Or treated as court fees only (CPR 3.14)</em></div></div><div class="tl-value danger">CCMC date</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div style="background:var(--accent-light);border:1px solid rgba(45,74,62,.2);border-radius:var(--rl);padding:14px 16px;margin-top:.5rem">
+  <div style="font-size:11px;font-weight:500;color:var(--accent-text);text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace;margin-bottom:.75rem">The most tested time limits — know these cold</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+    <div style="background:var(--surface);border-radius:var(--r);padding:10px 12px;border:1px solid var(--border)">
+      <div style="font-size:20px;font-weight:600;color:var(--danger);font-family:'DM Mono',monospace">96 hrs</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">Max police detention (indictable)</div>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--r);padding:10px 12px;border:1px solid var(--border)">
+      <div style="font-size:20px;font-weight:600;color:var(--warn);font-family:'DM Mono',monospace">28 days</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">Criminal appeal leave from conviction</div>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--r);padding:10px 12px;border:1px solid var(--border)">
+      <div style="font-size:20px;font-weight:600;color:var(--warn);font-family:'DM Mono',monospace">21 days</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">Part 36 minimum relevant period</div>
+    </div>
+    <div style="background:var(--surface);border-radius:var(--r);padding:10px 12px;border:1px solid var(--border)">
+      <div style="font-size:20px;font-weight:600;color:var(--success);font-family:'DM Mono',monospace">4 months</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px">Claim form validity (within jurisdiction)</div>
+    </div>
+  </div>
+</div>
+</div>
+
   <div id="page-topic" class="page">
     <div class="page-hdr"><h1 id="t-title"></h1><p id="t-sub"></p></div>
     <div class="topic-actions">
