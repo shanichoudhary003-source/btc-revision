@@ -659,6 +659,20 @@ html.dark .oc-badge.io{background:#1a2e24;color:#7bc4a0}
 .mock-review-icon.correct{background:var(--success-light);color:var(--success)}
 .mock-review-icon.wrong{background:var(--danger-light);color:var(--danger)}
 .mock-review-body{display:none;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2);font-size:12px;color:var(--text2);line-height:1.6}
+.mock-hist-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.mock-hist-card:hover{border-color:var(--accent)}
+.mock-hist-hdr{padding:12px 14px;display:flex;align-items:center;gap:10px}
+.mock-hist-score{font-size:22px;font-weight:600;font-family:'DM Mono',monospace;min-width:48px}
+.mock-hist-meta{flex:1;min-width:0}
+.mock-hist-title{font-size:13px;font-weight:500;color:var(--text)}
+.mock-hist-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.mock-hist-detail{display:none;padding:10px 14px;border-top:1px solid var(--border);background:var(--surface2)}
+.mock-hist-topics{display:flex;flex-direction:column;gap:4px}
+.mock-hist-topic{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text2)}
+.mock-hist-topic-score{font-family:'DM Mono',monospace;font-size:11px;font-weight:500}
+.mock-hist-empty{font-size:12px;color:var(--text3);padding:1rem 0;text-align:center}
+.mock-hist-del{padding:3px 8px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;flex-shrink:0}
+.mock-hist-del:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-light)}
 </style>
 
 <div id="mock-setup" class="mock-setup">
@@ -720,6 +734,11 @@ html.dark .oc-badge.io{background:#1a2e24;color:#7bc4a0}
 </div>
 
 <div id="mock-results" style="display:none" class="mock-results"></div>
+
+<div id="mock-history" class="mock-setup" style="margin-top:1.5rem">
+  <div class="section-lbl" style="margin-bottom:.6rem">Past attempts</div>
+  <div id="mock-history-list"></div>
+</div>
 </div>
 
   <div id="page-topic" class="page">
@@ -1199,7 +1218,8 @@ async function gistSave(){
   if(!GIST_TOKEN)return;
   setSyncStatus('saving');
   try{
-    const body={files:{'btc_progress.json':{content:JSON.stringify(S)}}};
+    const mockHist = localStorage.getItem('btc_mock_history') || '[]';
+    const body={files:{'btc_progress.json':{content:JSON.stringify(S)},'btc_mock_history.json':{content:mockHist}}};
     let res;
     if(GIST_ID){
       res=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'token '+GIST_TOKEN,'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -1221,6 +1241,8 @@ async function gistLoad(){
     const d=await res.json();
     const content=d.files&&d.files['btc_progress.json']&&d.files['btc_progress.json'].content;
     if(content){S=JSON.parse(content);localStorage.setItem('btc_v4',JSON.stringify(S));}
+    const mockHistContent=d.files&&d.files['btc_mock_history.json']&&d.files['btc_mock_history.json'].content;
+    if(mockHistContent){localStorage.setItem('btc_mock_history',mockHistContent);renderMockHistory();}
     setSyncStatus('saved');setTimeout(()=>setSyncStatus('idle'),2000);
     return true;
   }catch(e){setSyncStatus('error');return false;}
@@ -2149,6 +2171,7 @@ function startMock() {
   document.getElementById('mock-setup').style.display = 'none';
   document.getElementById('mock-live').style.display = 'block';
   document.getElementById('mock-results').style.display = 'none';
+  document.getElementById('mock-history').style.display = 'none';
 
   renderMockQuestion();
   renderMockDots();
@@ -2341,6 +2364,122 @@ function endMock() {
   document.getElementById('mock-live').style.display = 'none';
   document.getElementById('mock-results').style.display = 'block';
   document.getElementById('mock-results').innerHTML = html;
+
+  // Save this attempt to history
+  saveMockAttempt(mockState, correct, total, wrong, pct, avgSec, timeUsed, byTopic);
+}
+
+function saveMockAttempt(state, correct, total, wrong, pct, avgSec, timeUsed, byTopic) {
+  const history = getMockHistory();
+  const typeLabels = {pp_crim:'Criminal — Official Mock',pp_civil1:'Civil P1 — Official Mock',crim:'Criminal — Practice',civil:'Civil — Practice',mixed:'Mixed — Practice'};
+  const topicBreakdown = Object.values(byTopic).map(t => ({title:t.title, correct:t.correct, total:t.total}));
+  
+  // Store wrong question indices for review
+  const wrongQs = [];
+  state.questions.forEach((item, i) => {
+    if(state.answers[i] !== item.q.ans) {
+      wrongQs.push({
+        qText: item.q.q.substring(0, 120),
+        yourAns: state.answers[i] === -1 ? 'Unanswered' : item.q.opts[state.answers[i]].substring(0, 60),
+        correctAns: item.q.opts[item.q.ans].substring(0, 60),
+        topic: item.tTitle
+      });
+    }
+  });
+
+  history.unshift({
+    id: Date.now(),
+    date: new Date().toISOString(),
+    type: state.type,
+    typeLabel: typeLabels[state.type] || state.type,
+    total: total,
+    correct: correct,
+    wrong: wrong,
+    pct: pct,
+    avgSec: avgSec,
+    timeUsed: timeUsed,
+    topics: topicBreakdown,
+    wrongQs: wrongQs
+  });
+
+  // Keep max 20 attempts
+  if(history.length > 20) history.length = 20;
+
+  localStorage.setItem('btc_mock_history', JSON.stringify(history));
+  renderMockHistory();
+  if(GIST_TOKEN){clearTimeout(syncTimer);syncTimer=setTimeout(gistSave,1500);}
+}
+
+function getMockHistory() {
+  try {
+    const raw = localStorage.getItem('btc_mock_history');
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+
+function renderMockHistory() {
+  const el = document.getElementById('mock-history-list');
+  if(!el) return;
+  const history = getMockHistory();
+  
+  if(history.length === 0) {
+    el.innerHTML = '<div class="mock-hist-empty">No attempts yet. Complete a mock exam to see your history here.</div>';
+    return;
+  }
+
+  el.innerHTML = history.map((a, idx) => {
+    const d = new Date(a.date);
+    const dateStr = d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+    const timeStr = d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+    const grade = a.pct >= 70 ? 'g' : a.pct >= 55 ? 'a' : 'r';
+    const gradeColor = grade === 'g' ? 'var(--success)' : grade === 'a' ? 'var(--warn)' : 'var(--danger)';
+    const mins = Math.floor(a.timeUsed / 60);
+    const detailId = 'mock-hist-' + a.id;
+
+    let topicsHtml = '';
+    if(a.topics && a.topics.length > 0) {
+      const sorted = [...a.topics].sort((x,y) => (x.correct/x.total) - (y.correct/y.total));
+      topicsHtml = '<div class="mock-hist-topics">' + sorted.map(t => {
+        const tPct = Math.round(t.correct/t.total*100);
+        const tColor = tPct >= 80 ? 'var(--success)' : tPct >= 60 ? 'var(--warn)' : 'var(--danger)';
+        return '<div class="mock-hist-topic"><span>' + t.title + '</span><span class="mock-hist-topic-score" style="color:' + tColor + '">' + t.correct + '/' + t.total + '</span></div>';
+      }).join('') + '</div>';
+    }
+
+    let wrongHtml = '';
+    if(a.wrongQs && a.wrongQs.length > 0) {
+      wrongHtml = '<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px"><div style="font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">' + a.wrongQs.length + ' wrong answer' + (a.wrongQs.length > 1 ? 's' : '') + '</div>';
+      wrongHtml += a.wrongQs.slice(0, 10).map(w => 
+        '<div style="font-size:11px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border)">' +
+        '<div style="color:var(--text);margin-bottom:2px">' + w.qText + '…</div>' +
+        '<span style="color:var(--danger)">✗ ' + w.yourAns + '…</span> → <span style="color:var(--success)">✓ ' + w.correctAns + '…</span>' +
+        '</div>'
+      ).join('');
+      if(a.wrongQs.length > 10) wrongHtml += '<div style="font-size:11px;color:var(--text3);padding:4px 0">+ ' + (a.wrongQs.length - 10) + ' more</div>';
+      wrongHtml += '</div>';
+    }
+
+    return '<div class="mock-hist-card">' +
+      '<div class="mock-hist-hdr" onclick="document.getElementById(\'' + detailId + '\').style.display=document.getElementById(\'' + detailId + '\').style.display===\'none\'?\'block\':\'none\'">' +
+      '<div class="mock-hist-score" style="color:' + gradeColor + '">' + a.pct + '%</div>' +
+      '<div class="mock-hist-meta">' +
+      '<div class="mock-hist-title">' + a.typeLabel + '</div>' +
+      '<div class="mock-hist-sub">' + a.correct + '/' + a.total + ' · ' + mins + ' mins · ' + a.avgSec + 's avg · ' + dateStr + ' ' + timeStr + '</div>' +
+      '</div>' +
+      '<button class="mock-hist-del" onclick="event.stopPropagation();deleteMockAttempt(' + idx + ')" title="Delete">✕</button>' +
+      '</div>' +
+      '<div class="mock-hist-detail" id="' + detailId + '">' +
+      topicsHtml + wrongHtml +
+      '</div></div>';
+  }).join('');
+}
+
+function deleteMockAttempt(idx) {
+  if(!confirm('Delete this attempt?')) return;
+  const history = getMockHistory();
+  history.splice(idx, 1);
+  localStorage.setItem('btc_mock_history', JSON.stringify(history));
+  renderMockHistory();
 }
 
 function resetMock() {
@@ -2349,9 +2488,11 @@ function resetMock() {
   document.getElementById('mock-setup').style.display = 'block';
   document.getElementById('mock-live').style.display = 'none';
   document.getElementById('mock-results').style.display = 'none';
+  document.getElementById('mock-history').style.display = 'block';
+  renderMockHistory();
 }
 
-load();buildNav();refreshDash();updateCountdowns();setInterval(updateCountdowns,60000);
+load();buildNav();refreshDash();updateCountdowns();renderMockHistory();setInterval(updateCountdowns,60000);
 const savedDark=localStorage.getItem('btc_dark')==='1';
 if(savedDark){document.documentElement.classList.add('dark');const dt=document.getElementById('dark-toggle');if(dt)dt.checked=true;}
 function toggleDark(on){document.documentElement.classList.toggle('dark',on);localStorage.setItem('btc_dark',on?'1':'0');}
