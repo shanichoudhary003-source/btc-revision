@@ -721,9 +721,16 @@ html.dark .oc-badge.io{background:#1a2e24;color:#7bc4a0}
 <div id="mock-live" style="display:none">
   <div class="mock-timer-bar" id="mock-timer-bar">
     <div class="mock-timer" id="mock-timer">3:00:00</div>
+    <button class="mock-nav-btn" id="mock-pause-btn" onclick="toggleMockPause()" style="font-size:11px;padding:4px 10px">⏸ Pause</button>
     <div class="mock-progress-wrap"><div class="mock-progress-bar" id="mock-prog-bar"></div></div>
     <div class="mock-q-count" id="mock-q-count">1/75</div>
     <button class="mock-nav-btn danger" onclick="endMock()" style="font-size:11px;padding:4px 10px">End exam</button>
+  </div>
+  <div id="mock-pause-overlay" style="display:none;padding:3rem 1.5rem;text-align:center">
+    <div style="font-size:48px;margin-bottom:1rem">⏸</div>
+    <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px">Exam paused</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:1.25rem">Questions are hidden while paused. Timer is stopped.</div>
+    <button class="done-btn" onclick="toggleMockPause()" style="padding:10px 24px;font-size:14px">▶ Resume exam</button>
   </div>
   <div id="mock-question-area"></div>
   <div class="mock-nav">
@@ -2096,6 +2103,7 @@ let mockType = 'crim';
 let mockCount = 75;
 let mockTimeMins = 180;
 let mockTimerInterval = null;
+let mockPaused = false;
 
 function selectMockType(type) {
   mockType = type;
@@ -2176,14 +2184,35 @@ function startMock() {
   renderMockQuestion();
   renderMockDots();
   updateMockTimer();
+  mockPaused = false;
   mockTimerInterval = setInterval(() => {
-    if(!mockState || mockState.finished) return;
+    if(!mockState || mockState.finished || mockPaused) return;
     mockState.timeLeft--;
     updateMockTimer();
     if(mockState.timeLeft <= 0) {
       endMock();
     }
   }, 1000);
+}
+
+function toggleMockPause() {
+  if(!mockState || mockState.finished) return;
+  mockPaused = !mockPaused;
+  const btn = document.getElementById('mock-pause-btn');
+  const overlay = document.getElementById('mock-pause-overlay');
+  const questionArea = document.getElementById('mock-question-area');
+  const nav = document.querySelector('.mock-nav');
+  if(mockPaused) {
+    if(btn) btn.innerHTML = '▶ Resume';
+    if(overlay) overlay.style.display = 'block';
+    if(questionArea) questionArea.style.display = 'none';
+    if(nav) nav.style.display = 'none';
+  } else {
+    if(btn) btn.innerHTML = '⏸ Pause';
+    if(overlay) overlay.style.display = 'none';
+    if(questionArea) questionArea.style.display = 'block';
+    if(nav) nav.style.display = 'flex';
+  }
 }
 
 function updateMockTimer() {
@@ -2484,6 +2513,7 @@ function deleteMockAttempt(idx) {
 
 function resetMock() {
   mockState = null;
+  mockPaused = false;
   clearInterval(mockTimerInterval);
   document.getElementById('mock-setup').style.display = 'block';
   document.getElementById('mock-live').style.display = 'none';
