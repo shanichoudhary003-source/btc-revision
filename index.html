@@ -1553,14 +1553,14 @@ function refreshDash(){
   const avg=att.length>0?Math.round(att.reduce((a,w)=>{
     const sc=ws(w.id).scores;
     const latest=sc[sc.length-1];
-    return a+(latest/w.qs.length*10);
-  },0)/att.length*10)/10:null;
+    return a+(latest/w.qs.length*100);
+  },0)/att.length):null;
   const wk=all.filter(w=>{const s=ws(w.id).scores;return s&&s.length>0&&s[s.length-1]/w.qs.length<0.7;});
   const label=dashView==='civil'?'Civil':dashView==='crim'?'Criminal':'All';
   document.getElementById('dash-stats').innerHTML=`
     <div class="stat-card"><div class="stat-lbl">Topics done</div><div class="stat-val">${done}/${all.length}</div></div>
     <div class="stat-card"><div class="stat-lbl">MCQs done</div><div class="stat-val">${doneMcqs}/${totalMcqs}</div></div>
-    <div class="stat-card"><div class="stat-lbl">Avg score</div><div class="stat-val ${avg===null?'':avg>=8?'g':avg>=6?'a':'r'}">${avg===null?'—':Math.round(avg)+'%'}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Avg score</div><div class="stat-val ${avg===null?'':avg>=80?'g':avg>=60?'a':'r'}">${avg===null?'—':avg+'%'}</div></div>
     <div class="stat-card"><div class="stat-lbl">Weak spots</div><div class="stat-val ${wk.length>0?'r':''}">${wk.length}</div></div>`;
   const cvd=CIVIL.filter(w=>ws(w.id).done).length;
   const crd=CRIMINAL.filter(w=>ws(w.id).done).length;
